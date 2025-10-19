@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Licznik Punktów - Tysiąc</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .card {
+            background-color: #1e293b; /* slate-800 */
+            border-radius: 0.75rem; /* rounded-xl */
+            padding: 1.5rem; /* p-6 */
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem; /* rounded-lg */
+            font-weight: 600;
+            text-align: center;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+            cursor: pointer;
+        }
+        .btn-primary {
+            background-color: #14b8a6; /* teal-500 */
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #0d9488; /* teal-600 */
+        }
+        .btn-secondary {
+            background-color: #475569; /* slate-600 */
+            color: #f1f5f9; /* slate-100 */
+        }
+        .btn-secondary:hover {
+            background-color: #334155; /* slate-700 */
+        }
+        .input-field {
+            width: 100%;
+            background-color: #334155; /* slate-700 */
+            border: 1px solid #475569; /* slate-600 */
+            color: #f1f5f9; /* slate-100 */
+            padding: 0.75rem;
+            border-radius: 0.5rem; /* rounded-lg */
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #14b8a6; /* teal-500 */
+            box-shadow: 0 0 0 2px #14b8a680;
+        }
+        /* Ukrywanie strzałek w polach numerycznych */
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-4xl mx-auto">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-teal-400">Licznik Punktów do Tysiąca</h1>
+            <p class="text-slate-400 mt-2">Zapisuj wyniki i śledź statystyki swoich gier.</p>
+        </header>
+
+        <!-- Ekran Ustawień Gry -->
+        <div id="setup-screen" class="card space-y-6">
+            <h2 class="text-2xl font-semibold text-center">Nowa Gra</h2>
+            <div>
+                <label for="player-count" class="block mb-2 font-medium text-slate-300">Liczba graczy:</label>
+                <select id="player-count" class="input-field">
+                    <option value="2">2 graczy</option>
+                    <option value="3" selected>3 graczy</option>
+                    <option value="4">4 gracze</option>
+                </select>
+            </div>
+            <div id="player-names-container" class="space-y-4">
+                <!-- Pola na imiona graczy będą generowane przez JS -->
+            </div>
+            <div class="flex flex-col sm:flex-row gap-4">
+                <button id="start-game-btn" class="btn btn-primary w-full">Rozpocznij Grę</button>
+                <button id="show-stats-btn" class="btn btn-secondary w-full">Pokaż Statystyki</button>
+            </div>
+        </div>
+
+        <!-- Ekran Gry -->
+        <div id="game-screen" class="hidden">
+            <div id="game-controls" class="mb-4">
+                 <button id="rotate-first-player-btn" class="btn btn-secondary w-full mb-4">Obróć gracza rozpoczynającego ♛</button>
+            </div>
+            <div id="scoreboard" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <!-- Wyniki graczy będą generowane przez JS -->
+            </div>
+            <div class="card space-y-4">
+                <h3 class="text-xl font-semibold">Dodaj punkty za rundę:</h3>
+                <div id="score-inputs" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <!-- Pola do wpisywania punktów będą generowane przez JS -->
+                </div>
+                <button id="add-round-btn" class="btn btn-primary w-full">Dodaj Wynik Rundy</button>
+            </div>
+             <div class="mt-6 flex flex-col sm:flex-row gap-4">
+                <button id="new-game-btn" class="btn btn-secondary w-full">Nowa Gra</button>
+                <button id="back-to-menu-btn" class="btn btn-secondary w-full">Powrót do Menu Głównego</button>
+                <button id="game-to-stats-btn" class="btn btn-secondary w-full">Pokaż Statystyki</button>
+            </div>
+        </div>
+
+        <!-- Ekran Statystyk -->
+        <div id="stats-screen" class="hidden card space-y-6">
+            <h2 class="text-2xl font-semibold text-center">Statystyki Gier</h2>
+            <div id="stats-summary" class="text-center bg-slate-700 p-4 rounded-lg">
+                <!-- Podsumowanie statystyk będzie generowane przez JS -->
+            </div>
+            <div id="stats-history" class="space-y-4 max-h-96 overflow-y-auto pr-2">
+                <!-- Historia gier będzie generowana przez JS -->
+            </div>
+            <div class="flex flex-col sm:flex-row gap-4">
+                <button id="back-to-setup-btn" class="btn btn-primary w-full">Powrót do Menu</button>
+                <button id="clear-stats-btn" class="btn bg-red-600 hover:bg-red-700 text-white w-full">Wyczyść Statystyki</button>
+            </div>
+        </div>
+
+        <!-- Modal Zwycięzcy -->
+        <div id="winner-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center p-4">
+            <div class="card text-center space-y-6 max-w-sm w-full">
+                <h2 class="text-3xl font-bold text-teal-400">Koniec Gry!</h2>
+                <p id="winner-message" class="text-xl"></p>
+                <div id="final-scores" class="text-left space-y-2"></div>
+                <button id="modal-new-game-btn" class="btn btn-primary w-full">Zagraj Ponownie</button>
+            </div>
+        </div>
+
+    </div>
+
+<script>
+    // --- Referencje do elementów DOM ---
+    const setupScreen = document.getElementById('setup-screen');
+    const gameScreen = document.getElementById('game-screen');
+    const statsScreen = document.getElementById('stats-screen');
+    const winnerModal = document.getElementById('winner-modal');
+
+    const playerCountSelect = document.getElementById('player-count');
+    const playerNamesContainer = document.getElementById('player-names-container');
+    const startGameBtn = document.getElementById('start-game-btn');
+    const showStatsBtn = document.getElementById('show-stats-btn');
+
+    const scoreboard = document.getElementById('scoreboard');
+    const scoreInputs = document.getElementById('score-inputs');
+    const addRoundBtn = document.getElementById('add-round-btn');
+    const newGameBtn = document.getElementById('new-game-btn');
+    const backToMenuBtn = document.getElementById('back-to-menu-btn');
+    const rotateFirstPlayerBtn = document.getElementById('rotate-first-player-btn');
+    const gameToStatsBtn = document.getElementById('game-to-stats-btn');
+    
+    const statsSummary = document.getElementById('stats-summary');
+    const statsHistory = document.getElementById('stats-history');
+    const backToSetupBtn = document.getElementById('back-to-setup-btn');
+    const clearStatsBtn = document.getElementById('clear-stats-btn');
+
+    const winnerMessage = document.getElementById('winner-message');
+    const finalScores = document.getElementById('final-scores');
+    const modalNewGameBtn = document.getElementById('modal-new-game-btn');
+
+
+    // --- Stan Aplikacji ---
+    let gameState = {
+        players: [],
+        isActive: false,
+        firstPlayerIndex: 0,
+    };
+
+    const GAME_STATE_KEY = 'tysiacGameState';
+    const STATS_KEY = 'tysiacGameStats';
+
+    // --- Funkcje Główne ---
+
+    // Generuje pola na imiona graczy na podstawie wybranej liczby
+    function generatePlayerNameInputs() {
+        const count = parseInt(playerCountSelect.value, 10);
+        playerNamesContainer.innerHTML = '';
+        for (let i = 1; i <= count; i++) {
+            const div = document.createElement('div');
+            div.innerHTML = `
+                <label for="player${i}" class="block mb-1 text-sm font-medium text-slate-400">Imię gracza ${i}:</label>
+                <input type="text" id="player${i}" class="input-field" placeholder="Gracz ${i}" value="Gracz ${i}">
+            `;
+            playerNamesContainer.appendChild(div);
+        }
+    }
+
+    // Rozpoczyna nową grę
+    function startGame() {
+        const playerCount = parseInt(playerCountSelect.value, 10);
+        const players = [];
+        let hasValidNames = true;
+
+        for (let i = 1; i <= playerCount; i++) {
+            const playerNameInput = document.getElementById(`player${i}`);
+            const playerName = playerNameInput.value.trim();
+            if (playerName === '') {
+                playerNameInput.style.borderColor = 'red';
+                hasValidNames = false;
+            } else {
+                playerNameInput.style.borderColor = '';
+                players.push({ name: playerName, score: 0 });
+            }
+        }
+        
+        if (!hasValidNames) {
+            // Używam niestandardowego modala zamiast alert()
+            showCustomAlert('Wszystkie pola z imionami muszą być wypełnione.');
+            return;
+        }
+
+        gameState = { players, isActive: true, firstPlayerIndex: 0 };
+        saveGameState();
+        renderGameScreen();
+        
+        setupScreen.classList.add('hidden');
+        statsScreen.classList.add('hidden');
+        gameScreen.classList.remove('hidden');
+    }
+
+    // Dodaje punkty z rundy do ogólnego wyniku
+    function addRoundScore() {
+        let scoresAdded = false;
+        gameState.players.forEach((player, index) => {
+            const input = document.getElementById(`score-input-${index}`);
+            const scoreValue = parseInt(input.value, 10);
+
+            if (!isNaN(scoreValue)) {
+                player.score += scoreValue;
+                scoresAdded = true;
+            }
+            input.value = ''; // Resetowanie pola po dodaniu
+        });
+
+        if (scoresAdded) {
+            updateScoreValues();
+            checkWinner();
+            saveGameState();
+        }
+    }
+
+    // Sprawdza, czy któryś z graczy osiągnął 1000 punktów
+    function checkWinner() {
+        const potentialWinners = gameState.players.filter(p => p.score >= 1000);
+
+        if (potentialWinners.length > 0) {
+            // Jeśli jest jeden zwycięzca lub wielu, wygrywa ten z największą liczbą punktów
+            const winner = potentialWinners.reduce((prev, current) => (prev.score > current.score) ? prev : current);
+            endGame(winner);
+        }
+    }
+
+    // Kończy grę i pokazuje modal zwycięzcy
+    function endGame(winner) {
+        saveStats(winner);
+        
+        winnerMessage.textContent = `Wygrywa ${winner.name}! Gratulacje!`;
+        finalScores.innerHTML = '<h4>Końcowe wyniki:</h4>' + gameState.players
+            .map(p => `<div class="flex justify-between"><span>${p.name}:</span><span class="font-semibold">${p.score} pkt</span></div>`)
+            .join('');
+
+        winnerModal.classList.remove('hidden');
+        winnerModal.classList.add('flex');
+        
+        // Czyści stan gry, aby po zamknięciu modala nie wracać do zakończonej rozgrywki
+        clearGameState();
+    }
+    
+    // Zapisuje statystyki zakończonej gry
+    function saveStats(winner) {
+        const stats = getStats();
+        
+        const gameRecord = {
+            date: new Date().toLocaleString('pl-PL'),
+            winner: winner.name,
+            players: gameState.players.map(p => ({ name: p.name, score: p.score })),
+        };
+
+        stats.games.unshift(gameRecord); // Dodaj na początek listy
+        
+        if (!stats.playerWins[winner.name]) {
+            stats.playerWins[winner.name] = 0;
+        }
+        stats.playerWins[winner.name]++;
+        stats.totalGames++;
+
+        localStorage.setItem(STATS_KEY, JSON.stringify(stats));
+    }
+    
+    function resetGame() {
+        clearGameState();
+        gameScreen.classList.add('hidden');
+        statsScreen.classList.add('hidden');
+        setupScreen.classList.remove('hidden');
+        winnerModal.classList.add('hidden');
+        winnerModal.classList.remove('flex');
+    }
+
+    // --- Funkcje pomocnicze i renderujące ---
+
+    // Renderuje cały ekran gry (tablicę wyników i pola do wpisywania)
+    function renderGameScreen() {
+        scoreboard.innerHTML = '';
+        scoreInputs.innerHTML = '';
+        gameState.players.forEach((player, index) => {
+            // Tworzenie karty wyniku
+            const scoreCard = document.createElement('div');
+            scoreCard.className = 'card text-center';
+            scoreCard.innerHTML = `
+                <div id="player-name-${index}" class="text-lg font-semibold flex items-center justify-center gap-2">${player.name}</div>
+                <div id="player-score-${index}" class="text-4xl font-bold text-teal-400 mt-2">${player.score}</div>
+            `;
+            scoreboard.appendChild(scoreCard);
+
+            // Tworzenie pola do wpisywania punktów
+            const inputContainer = document.createElement('div');
+            inputContainer.innerHTML = `
+                <label for="score-input-${index}" class="block mb-1 text-sm font-medium text-slate-400">${player.name}</label>
+                <input type="number" id="score-input-${index}" class="input-field text-center" placeholder="0">
+            `;
+            scoreInputs.appendChild(inputContainer);
+        });
+        updateFirstPlayerMarker();
+    }
+
+    // Aktualizuje tylko wyświetlane wyniki na tablicy
+    function updateScoreValues() {
+        gameState.players.forEach((player, index) => {
+            const scoreElement = document.getElementById(`player-score-${index}`);
+            scoreElement.textContent = player.score;
+        });
+    }
+    
+    // Oznacza gracza rozpoczynającego
+    function updateFirstPlayerMarker() {
+        gameState.players.forEach((player, index) => {
+            const nameElement = document.getElementById(`player-name-${index}`);
+            if (!nameElement) return;
+
+            // Usuń istniejący znacznik
+            const existingMarker = nameElement.querySelector('span');
+            if (existingMarker) {
+                existingMarker.remove();
+            }
+
+            // Dodaj nowy znacznik, jeśli to pierwszy gracz
+            if (index === gameState.firstPlayerIndex) {
+                const marker = document.createElement('span');
+                marker.className = 'text-amber-400 text-base';
+                marker.title = 'Gracz rozpoczynający';
+                marker.innerHTML = '♛';
+                nameElement.appendChild(marker);
+            }
+        });
+    }
+
+    // Obraca gracza rozpoczynającego
+    function rotateFirstPlayer() {
+        if (!gameState.isActive) return;
+        gameState.firstPlayerIndex = (gameState.firstPlayerIndex + 1) % gameState.players.length;
+        updateFirstPlayerMarker();
+        saveGameState();
+    }
+
+    // Wyświetla ekran statystyk
+    function showStats() {
+        const stats = getStats();
+
+        // Podsumowanie
+        let summaryHtml = `<p class="text-lg">Zagrano łącznie: <span class="font-bold text-teal-400">${stats.totalGames}</span> gier</p>`;
+        const sortedWins = Object.entries(stats.playerWins).sort(([,a],[,b]) => b-a);
+        
+        if (sortedWins.length > 0) {
+            summaryHtml += `<h4 class="mt-4 mb-2 font-semibold">Ranking zwycięstw:</h4>`;
+            summaryHtml += `<div class="space-y-1">`
+            sortedWins.forEach(([name, wins]) => {
+                const winPercentage = stats.totalGames > 0 ? ((wins / stats.totalGames) * 100).toFixed(0) : 0;
+                summaryHtml += `<div class="flex justify-center gap-2"><span>${name}:</span> <span class="font-semibold">${wins} wygrane (${winPercentage}%)</span></div>`;
+            });
+            summaryHtml += `</div>`
+        }
+        statsSummary.innerHTML = summaryHtml;
+
+        // Historia gier
+        statsHistory.innerHTML = '';
+        if (stats.games.length === 0) {
+            statsHistory.innerHTML = '<p class="text-slate-400 text-center">Brak historii gier.</p>';
+        } else {
+            stats.games.forEach(game => {
+                const gameDiv = document.createElement('div');
+                gameDiv.className = 'bg-slate-800 p-3 rounded-lg';
+                let playersHtml = game.players
+                    .sort((a,b) => b.score - a.score)
+                    .map(p => `<li class="text-slate-300">${p.name}: <strong>${p.score}</strong></li>`).join('');
+                
+                gameDiv.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="font-semibold text-sm">Zwycięzca: <span class="text-teal-400">${game.winner}</span></p>
+                            <p class="text-xs text-slate-400">${game.date}</p>
+                        </div>
+                        <details class="text-xs text-right">
+                            <summary class="cursor-pointer font-medium p-1">Wyniki</summary>
+                            <ul class="list-none mt-1 text-left">${playersHtml}</ul>
+                        </details>
+                    </div>
+                `;
+                statsHistory.appendChild(gameDiv);
+            });
+        }
+
+        setupScreen.classList.add('hidden');
+        gameScreen.classList.add('hidden');
+        statsScreen.classList.remove('hidden');
+    }
+
+    function handleClearStats() {
+        // Używam niestandardowego modala zamiast confirm()
+        showCustomConfirm('Czy na pewno chcesz usunąć wszystkie zapisane statystyki? Tej operacji nie można cofnąć.', () => {
+            localStorage.removeItem(STATS_KEY);
+            showStats(); // Odśwież widok
+        });
+    }
+
+    // --- Przechowywanie Danych (localStorage) ---
+    
+    function saveGameState() {
+        if (gameState.isActive) {
+            localStorage.setItem(GAME_STATE_KEY, JSON.stringify(gameState));
+        }
+    }
+
+    function loadGameState() {
+        const savedState = localStorage.getItem(GAME_STATE_KEY);
+        if (savedState) {
+            gameState = JSON.parse(savedState);
+            if (gameState.isActive) {
+                renderGameScreen();
+                setupScreen.classList.add('hidden');
+                gameScreen.classList.remove('hidden');
+            }
+        }
+    }
+
+    function clearGameState() {
+        gameState.isActive = false;
+        localStorage.removeItem(GAME_STATE_KEY);
+    }
+    
+    function getStats() {
+        const savedStats = localStorage.getItem(STATS_KEY);
+        if (savedStats) {
+            return JSON.parse(savedStats);
+        }
+        return { totalGames: 0, playerWins: {}, games: [] };
+    }
+
+
+    // --- Event Listeners ---
+    
+    // Przełączanie ekranów
+    showStatsBtn.addEventListener('click', showStats);
+    gameToStatsBtn.addEventListener('click', showStats);
+    backToSetupBtn.addEventListener('click', () => {
+        statsScreen.classList.add('hidden');
+        // Jeśli jest aktywna gra, wróc do niej, jeśli nie - do ustawień
+        if(gameState.isActive) {
+            gameScreen.classList.remove('hidden');
+        } else {
+            setupScreen.classList.remove('hidden');
+        }
+    });
+
+    // Logika gry
+    playerCountSelect.addEventListener('change', generatePlayerNameInputs);
+    startGameBtn.addEventListener('click', startGame);
+    addRoundBtn.addEventListener('click', addRoundScore);
+    rotateFirstPlayerBtn.addEventListener('click', rotateFirstPlayer);
+    
+    newGameBtn.addEventListener('click', () => {
+        showCustomConfirm('Czy na pewno chcesz zakończyć obecną grę i zacząć nową? Postęp nie zostanie zapisany w statystykach.', () => {
+            resetGame();
+        });
+    });
+
+    backToMenuBtn.addEventListener('click', () => {
+         showCustomConfirm('Czy na pewno chcesz porzucić obecną grę i wrócić do menu? Postęp nie zostanie zapisany.', () => {
+            resetGame();
+        });
+    });
+
+    modalNewGameBtn.addEventListener('click', resetGame);
+    clearStatsBtn.addEventListener('click', handleClearStats);
+
+    // Wciśnięcie Enter w polach wyników
+    scoreInputs.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            addRoundScore();
+        }
+    });
+
+    // --- Funkcje do niestandardowych okienek ---
+    function showCustomAlert(message) {
+        // Można rozbudować o tworzenie ładniejszego modala w przyszłości
+        alert(message); 
+    }
+
+    function showCustomConfirm(message, onConfirm) {
+        // Można rozbudować o tworzenie ładniejszego modala w przyszłości
+        if (confirm(message)) {
+            onConfirm();
+        }
+    }
+
+
+    // --- Inicjalizacja Aplikacji ---
+    
+    // Wygeneruj domyślne pola na imiona przy załadowaniu strony
+    generatePlayerNameInputs();
+    
+    // Sprawdź, czy w tle nie ma już aktywnej gry
+    loadGameState();
+
+</script>
+</body>
+</html>
+
