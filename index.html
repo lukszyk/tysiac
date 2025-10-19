@@ -123,30 +123,35 @@
 
         <!-- Ekran Gry -->
         <div id="game-screen" class="hidden">
+            <!-- 1. PRZYCISK OBRACANIA GRACZA -->
             <div id="game-controls" class="mb-3">
                  <button id="rotate-first-player-btn" class="btn btn-secondary w-full mb-3">Obróć gracza rozpoczynającego ♛</button>
             </div>
-            <div id="scoreboard" class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
-                <!-- Wyniki graczy będą generowane przez JS -->
-            </div>
             
-            <!-- SEKCJA: Historia Rund (Zmniejszona) -->
-            <div class="card mt-4 mb-4">
-                <h3 class="text-sm font-semibold mb-2">Historia Rund:</h3>
-                <div id="round-history-container" class="max-h-32 overflow-y-auto">
-                    <!-- Tabela Historii Rund będzie generowana przez JS -->
-                </div>
-            </div>
-
-            <div class="card space-y-3">
+            <!-- 2. DODAJ PUNKTY ZA RUNDĘ (NOWA LOKALIZACJA) -->
+            <div class="card space-y-3 mb-4">
                 <h3 class="text-base font-semibold">Dodaj punkty za rundę:</h3>
                 <div id="score-inputs" class="grid grid-cols-2 md:grid-cols-4 gap-2">
                     <!-- Pola do wpisywania punktów będą generowane przez JS -->
                 </div>
                 <button id="add-round-btn" class="btn btn-primary w-full">Dodaj Wynik Rundy</button>
             </div>
-             <!-- ZMIENIONE PRZYCISKI -->
-             <div class="mt-4 flex flex-row gap-2">
+
+            <!-- 3. AKTUALNY WYNIK GRACZY -->
+            <div id="scoreboard" class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
+                <!-- Wyniki graczy będą generowane przez JS -->
+            </div>
+            
+            <!-- 4. SEKCJA: Historia Rund (Zmniejszona) -->
+            <div class="card mb-4">
+                <h3 class="text-sm font-semibold mb-2">Historia Rund:</h3>
+                <div id="round-history-container" class="max-h-32 overflow-y-auto">
+                    <!-- Tabela Historii Rund będzie generowana przez JS -->
+                </div>
+            </div>
+
+            <!-- 5. ZMIENIONE PRZYCISKI -->
+             <div class="flex flex-row gap-2">
                 <!-- PRZYCISK STATYSTYKI -->
                 <button id="game-to-stats-btn" class="btn btn-secondary w-1/2">Statystyki</button>
                 <!-- PRZYCISK POWRÓT DO MENU (TERAZ PEŁNI ROLĘ NOWEJ GRY) -->
@@ -214,8 +219,7 @@
     const scoreboard = document.getElementById('scoreboard');
     const scoreInputs = document.getElementById('score-inputs');
     const addRoundBtn = document.getElementById('add-round-btn');
-    // const newGameBtn = document.getElementById('new-game-btn'); // USUNIĘTY
-    const backToMenuBtn = document.getElementById('back-to-menu-btn'); // PRZEJMUJE ROLĘ NOWEJ GRY
+    const backToMenuBtn = document.getElementById('back-to-menu-btn'); 
     const rotateFirstPlayerBtn = document.getElementById('rotate-first-player-btn');
     const gameToStatsBtn = document.getElementById('game-to-stats-btn');
     
@@ -228,7 +232,7 @@
 
     const winnerMessage = document.getElementById('winner-message');
     const finalScores = document.getElementById('final-scores');
-    const modalBackToMenuBtn = document.getElementById('modal-back-to-menu-btn'); // PRZEJMUJE ROLĘ NOWEJ GRY W MODALU
+    const modalBackToMenuBtn = document.getElementById('modal-back-to-menu-btn'); 
 
 
     // --- Stan Aplikacji ---
@@ -287,9 +291,8 @@
         }
 
         gameState = { players, history: [], isActive: true, firstPlayerIndex: 0 };
-        saveGameState(); // Zapis stanu po starcie nowej gry
+        saveGameState(); 
         renderGameScreen();
-        renderRoundHistory();
         
         setupScreen.classList.add('hidden');
         statsScreen.classList.add('hidden');
@@ -305,6 +308,7 @@
             const input = document.getElementById(`score-input-${index}`);
             const scoreValue = parseInt(input.value, 10);
 
+            // Zapisujemy 0, jeśli puste, aby runda była zapisana poprawnie
             roundScores[player.name] = isNaN(scoreValue) ? 0 : scoreValue;
             
             if (!isNaN(scoreValue) && scoreValue !== 0) {
@@ -320,7 +324,7 @@
             updateScoreValues();
             renderRoundHistory();
             checkWinner();
-            saveGameState(); // Zapis stanu po dodaniu rundy (Kluczowe dla trwałości)
+            saveGameState(); 
         }
     }
 
@@ -368,6 +372,7 @@
         const potentialWinners = gameState.players.filter(p => p.score >= 1000);
 
         if (potentialWinners.length > 0) {
+            // Znajdź zwycięzcę (tego z największą liczbą punktów)
             const winner = potentialWinners.reduce((prev, current) => (prev.score > current.score) ? prev : current);
             endGame(winner);
         }
@@ -375,7 +380,10 @@
 
     // Kończy grę i pokazuje modal zwycięzcy
     function endGame(winner) {
-        saveStats(winner);
+        // Upewnij się, że gra jest aktywna przed zapisem statystyk
+        if (gameState.isActive) {
+            saveStats(winner);
+        }
         
         winnerMessage.textContent = `Wygrywa ${winner.name}! Gratulacje!`;
         finalScores.innerHTML = '<h4>Końcowe wyniki:</h4>' + gameState.players
@@ -421,6 +429,32 @@
     }
 
     // --- Funkcje pomocnicze i renderujące ---
+    
+    // Obsługa wciśnięcia klawisza (głównie Enter) w polach wprowadzania wyników
+    function handleInputKeydown(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            
+            const currentInput = e.target;
+            // Wzięcie indexu gracza z atrybutu 'data-player-index'
+            const currentIndex = parseInt(currentInput.dataset.playerIndex, 10);
+            const nextIndex = currentIndex + 1;
+            const totalPlayers = gameState.players.length;
+
+            if (nextIndex < totalPlayers) {
+                // Przejdź do następnego gracza
+                const nextInput = document.getElementById(`score-input-${nextIndex}`);
+                nextInput?.focus();
+            } else {
+                // Ostatni gracz - dodaj wynik rundy
+                addRoundScore();
+                
+                // Po dodaniu wyników, ustaw focus z powrotem na pierwsze pole
+                document.getElementById('score-input-0')?.focus();
+            }
+        }
+    }
+
 
     // Renderuje cały ekran gry (tablicę wyników i pola do wpisywania)
     function renderGameScreen() {
@@ -440,12 +474,24 @@
             const inputContainer = document.createElement('div');
             inputContainer.innerHTML = `
                 <label for="score-input-${index}" class="block mb-1 text-xs font-medium text-slate-400">${player.name}</label>
-                <input type="number" id="score-input-${index}" class="input-field text-center text-sm" placeholder="0">
+                <input type="number" 
+                       id="score-input-${index}" 
+                       class="input-field text-center text-sm" 
+                       placeholder="0" 
+                       data-player-index="${index}"> <!-- Dodanie atrybutu indexu -->
             `;
             scoreInputs.appendChild(inputContainer);
+            
+            // Dodanie słuchacza do nowego pola (dla obsługi klawisza Enter)
+            const inputField = document.getElementById(`score-input-${index}`);
+            inputField.addEventListener('keydown', handleInputKeydown);
         });
+        
         updateFirstPlayerMarker();
         renderRoundHistory();
+        
+        // Ustawienie focusu na pierwszym polu, gdy ekran się załaduje
+        document.getElementById('score-input-0')?.focus(); 
     }
 
     // Aktualizuje tylko wyświetlane wyniki na tablicy
@@ -482,7 +528,7 @@
         if (!gameState.isActive) return;
         gameState.firstPlayerIndex = (gameState.firstPlayerIndex + 1) % gameState.players.length;
         updateFirstPlayerMarker();
-        saveGameState(); // Zapis stanu po zmianie gracza rozpoczynającego (Kluczowe dla trwałości)
+        saveGameState(); 
     }
 
     // Wyświetla ekran statystyk
@@ -541,7 +587,7 @@
     function handleBackFromStats() {
         statsScreen.classList.add('hidden');
         // Jeśli jest aktywna gra, wróć do niej, w przeciwnym razie do ustawień
-        if(localStorage.getItem(GAME_STATE_KEY)) {
+        if(gameState.isActive) {
             gameScreen.classList.remove('hidden');
         } else {
             setupScreen.classList.remove('hidden');
@@ -571,10 +617,8 @@
     
     // ZAPISUJE AKTUALNY STAN GRY
     function saveGameState() {
-        // Zapisujemy tylko jeśli gra jest aktywna
         if (gameState.isActive) {
             localStorage.setItem(GAME_STATE_KEY, JSON.stringify(gameState));
-            // console.log("Game state saved.");
         }
     }
 
@@ -583,23 +627,24 @@
         const savedState = localStorage.getItem(GAME_STATE_KEY);
         if (savedState) {
             gameState = JSON.parse(savedState);
-            // PRZYWRACANIE WIDOKU GRY
-            if (gameState.isActive) {
+            if (gameState.players && gameState.players.length > 0) {
+                 // Sprawdzenie isActive na wszelki wypadek, choć stan powinien być usunięty po wygranej
+                gameState.isActive = true; 
                 renderGameScreen();
                 setupScreen.classList.add('hidden');
                 gameScreen.classList.remove('hidden');
-                // console.log("Game state loaded successfully.");
                 return true;
+            } else {
+                // Jeśli jest zapisany stan, ale players są puste (błąd w logice), czyścimy stan
+                clearGameState();
             }
         }
-        // console.log("No active game state found.");
         return false;
     }
 
     function clearGameState() {
-        gameState.isActive = false;
+        gameState = { players: [], history: [], isActive: false, firstPlayerIndex: 0 };
         localStorage.removeItem(GAME_STATE_KEY);
-        // console.log("Game state cleared.");
     }
     
     function getStats() {
@@ -616,7 +661,7 @@
     // Przełączanie ekranów
     showStatsBtn.addEventListener('click', showStats);
     gameToStatsBtn.addEventListener('click', showStats);
-    backFromStatsBtn.addEventListener('click', handleBackFromStats); // Zmienione na handleBackFromStats
+    backFromStatsBtn.addEventListener('click', handleBackFromStats);
 
     // Logika gry
     playerCountSelect.addEventListener('change', generatePlayerNameInputs);
@@ -624,51 +669,79 @@
     addRoundBtn.addEventListener('click', addRoundScore);
     rotateFirstPlayerBtn.addEventListener('click', rotateFirstPlayer);
     
-    // Użycie nowej, ujednoliconej funkcji obsługi powrotu do menu
+    // Użycie ujednoliconej funkcji obsługi powrotu do menu
     backToMenuBtn.addEventListener('click', handleBackToMenu);
-    modalBackToMenuBtn.addEventListener('click', resetGame); // W modalu zwycięzcy od razu resetujemy grę
+    modalBackToMenuBtn.addEventListener('click', resetGame); 
     clearStatsBtn.addEventListener('click', handleClearStats);
 
-    // Wciśnięcie Enter w polach wyników
-    scoreInputs.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            addRoundScore();
-        }
-    });
+    // UWAGA: Usunięto globalny event listener dla 'keypress' na scoreInputs
+    // Wprowadzono event listener na pojedynczych polach w funkcji renderGameScreen
+    // i obsługa odbywa się w handleInputKeydown.
 
-    // --- Funkcje do niestandardowych okienek (Zamiast alert/confirm) ---
+
+    // --- Funkcje do niestandardowych okienek (POPRAWIONY BUG Z EVENTAMI) ---
+    // Przechowujemy referencje do aktualnych handlerów, aby móc je usunąć
+    let currentYesHandler = null;
+    let currentNoHandler = null;
+
     function showCustomAlert(message) {
-        // Używamy własnego modala potwierdzenia jako alertu.
-        showCustomConfirm(message, () => {});
+        // Używamy modala potwierdzenia jako alertu.
+        showCustomConfirm(message, () => {}, false); // Przekazujemy false, aby nie pokazywać przycisku "Tak"
     }
 
-    // Używa własnego modala zamiast natywnego confirm()
-    function showCustomConfirm(message, onConfirm) {
+    function showCustomConfirm(message, onConfirm, showNoButton = true) {
         confirmMessage.textContent = message;
         confirmModal.classList.add('flex');
         confirmModal.classList.remove('hidden');
-
-        // Klonowanie przycisków w celu usunięcia starych listenerów
-        // To jest konieczne, aby funkcja onConfirm była wywołana tylko raz
-        const newConfirmYesBtn = confirmYesBtn.cloneNode(true);
-        const newConfirmNoBtn = confirmNoBtn.cloneNode(true);
-
-        confirmYesBtn.replaceWith(newConfirmYesBtn);
-        confirmNoBtn.replaceWith(newConfirmNoBtn);
         
-        const closeModal = () => {
+        // Zarządzanie widocznością przycisków
+        confirmNoBtn.classList.toggle('hidden', !showNoButton);
+        if (!showNoButton) {
+            confirmYesBtn.textContent = 'OK';
+            confirmYesBtn.classList.remove('bg-red-600', 'hover:bg-red-700', 'w-1/2');
+            confirmYesBtn.classList.add('btn-primary', 'w-full');
+        } else {
+            confirmYesBtn.textContent = 'Tak';
+            confirmYesBtn.classList.add('bg-red-600', 'hover:bg-red-700', 'w-1/2');
+            confirmYesBtn.classList.remove('btn-primary', 'w-full');
+        }
+
+        // 1. Usuwamy stare handlery, jeśli istnieją
+        if (currentYesHandler) {
+            confirmYesBtn.removeEventListener('click', currentYesHandler);
+        }
+        if (currentNoHandler) {
+            confirmNoBtn.removeEventListener('click', currentNoHandler);
+        }
+
+        const cleanUp = () => {
             confirmModal.classList.add('hidden');
             confirmModal.classList.remove('flex');
+            // 3. Usuwamy nowe handlery po akcji/anulowaniu
+            confirmYesBtn.removeEventListener('click', currentYesHandler);
+            confirmNoBtn.removeEventListener('click', currentNoHandler);
+            
+            // Resetujemy stan przycisków
+            confirmYesBtn.textContent = 'Tak';
         };
 
-        newConfirmYesBtn.addEventListener('click', () => {
-            closeModal();
-            onConfirm();
-        }, { once: true });
+        const handleYes = () => {
+            cleanUp();
+            if (showNoButton) {
+                onConfirm(); // Wykonaj akcję tylko przy prawdziwym potwierdzeniu
+            }
+        };
 
-        newConfirmNoBtn.addEventListener('click', () => {
-            closeModal();
-        }, { once: true });
+        const handleNo = () => {
+            cleanUp();
+        };
+        
+        // 2. Ustawiamy nowe handlery
+        currentYesHandler = handleYes;
+        currentNoHandler = handleNo;
+        
+        confirmYesBtn.addEventListener('click', currentYesHandler);
+        confirmNoBtn.addEventListener('click', currentNoHandler);
     }
 
 
