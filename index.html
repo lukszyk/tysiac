@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Licznik Punktów - Tysiąc (Synchronizacja)</title>
+    <title>Licznik Punktów - Tysiąc</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,14 +16,15 @@
         .card {
             background-color: #1e293b; /* slate-800 */
             border-radius: 0.75rem; /* rounded-xl */
-            padding: 1.5rem; /* p-6 */
+            padding: 0.75rem; /* BARDZIEJ KOMPAKTOWE: p-3 (0.75rem) */
             box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
         }
         .btn {
             display: inline-block;
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem; /* rounded-lg */
+            padding: 0.4rem 0.8rem; /* Mniejsze wypełnienie */
+            border-radius: 0.5rem;
             font-weight: 600;
+            font-size: 0.875rem; /* text-sm */
             text-align: center;
             transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
             cursor: pointer;
@@ -47,16 +48,15 @@
             background-color: #334155; /* slate-700 */
             border: 1px solid #475569; /* slate-600 */
             color: #f1f5f9; /* slate-100 */
-            padding: 0.75rem;
-            border-radius: 0.5rem; /* rounded-lg */
+            padding: 0.4rem; /* BARDZIEJ KOMPAKTOWE */
+            border-radius: 0.5rem;
             transition: border-color 0.2s, box-shadow 0.2s;
         }
         .input-field:focus {
             outline: none;
-            border-color: #14b8a6; /* teal-500 */
+            border-color: #14b8a6;
             box-shadow: 0 0 0 2px #14b8a680;
         }
-        /* Ukrywanie strzałek w polach numerycznych */
         input[type=number]::-webkit-inner-spin-button,
         input[type=number]::-webkit-outer-spin-button {
             -webkit-appearance: none;
@@ -65,238 +65,206 @@
         input[type=number] {
             -moz-appearance: textfield;
         }
-        .modal {
-            background-color: #1e293b;
-            border-radius: 0.75rem;
-            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.3), 0 8px 10px -6px rgb(0 0 0 / 0.3);
+        
+        /* STYLES DLA MIKRO-HISTORII */
+        #round-history-container table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.75rem; /* BARDZO MAŁA CZCIONKA: text-xs */
+        }
+        #round-history-container th, #round-history-container td {
+            padding: 0.3rem 0.2rem; /* MINIMALNE WYPEŁNIENIE */
+            text-align: center;
+        }
+        #round-history-container th {
+            background-color: #334155;
+            font-weight: 600;
+            border-bottom: 2px solid #1e293b;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        #round-history-container tr:nth-child(even) {
+            background-color: #2d3846;
+        }
+        .history-score {
+            font-weight: 600;
+            color: #14b8aa;
         }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-100 flex items-center justify-center min-h-screen p-4">
+<body class="bg-slate-900 text-slate-100 flex items-center justify-center min-h-screen p-3">
 
     <div class="w-full max-w-4xl mx-auto">
         <header class="text-center mb-4">
-            <h1 class="text-4xl font-bold text-teal-400">Tysiąc (Zsynchronizowany)</h1>
-            <p id="status-message" class="text-sm text-slate-400 mt-2">Łączenie z bazą danych...</p>
+            <h5 class="text-2xl font-bold text-teal-400">Licznik Punktów do Tysiąca</h5>
+            
         </header>
 
         <!-- Ekran Ustawień Gry -->
-        <div id="setup-screen" class="card space-y-6">
-            <h2 class="text-2xl font-semibold text-center">Nowa Gra</h2>
+        <div id="setup-screen" class="card space-y-3">
+            <h2 class="text-lg font-semibold text-center">Nowa Gra</h2>
             <div>
-                <label for="player-count" class="block mb-2 font-medium text-slate-300">Liczba graczy:</label>
+                <label for="player-count" class="block mb-1 text-sm font-medium text-slate-300">Liczba graczy:</label>
                 <select id="player-count" class="input-field">
-                    <option value="2">2 graczy</option>
-                    <option value="3" selected>3 graczy</option>
+                    <option value="2" selected>2 graczy</option>
+                    <option value="3">3 graczy</option>
                     <option value="4">4 gracze</option>
                 </select>
             </div>
-            <div id="player-names-container" class="space-y-4">
+            <div id="player-names-container" class="space-y-2">
                 <!-- Pola na imiona graczy będą generowane przez JS -->
             </div>
-            <div class="flex flex-col sm:flex-row gap-4">
-                <button id="start-game-btn" class="btn btn-primary w-full" disabled>Rozpocznij Grę</button>
-                <button id="show-stats-btn" class="btn btn-secondary w-full" disabled>Pokaż Statystyki</button>
+            <div class="flex flex-col sm:flex-row gap-2">
+                <button id="start-game-btn" class="btn btn-primary w-full">Rozpocznij Grę</button>
+                <button id="show-stats-btn" class="btn btn-secondary w-full">Pokaż Statystyki</button>
             </div>
         </div>
 
         <!-- Ekran Gry -->
         <div id="game-screen" class="hidden">
-            <div id="game-controls" class="mb-4">
-                 <button id="rotate-first-player-btn" class="btn btn-secondary w-full mb-4">Obróć gracza rozpoczynającego ♛</button>
+            <div id="game-controls" class="mb-3">
+                 <button id="rotate-first-player-btn" class="btn btn-secondary w-full mb-3">Obróć gracza rozpoczynającego ♛</button>
             </div>
-            <div id="scoreboard" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div id="scoreboard" class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
                 <!-- Wyniki graczy będą generowane przez JS -->
             </div>
-            <div class="card space-y-4">
-                <h3 class="text-xl font-semibold">Dodaj punkty za rundę:</h3>
-                <div id="score-inputs" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            
+            <!-- SEKCJA: Historia Rund (Zmniejszona) -->
+            <div class="card mt-4 mb-4">
+                <h3 class="text-sm font-semibold mb-2">Historia Rund:</h3>
+                <div id="round-history-container" class="max-h-32 overflow-y-auto">
+                    <!-- Tabela Historii Rund będzie generowana przez JS -->
+                </div>
+            </div>
+
+            <div class="card space-y-3">
+                <h3 class="text-base font-semibold">Dodaj punkty za rundę:</h3>
+                <div id="score-inputs" class="grid grid-cols-2 md:grid-cols-4 gap-2">
                     <!-- Pola do wpisywania punktów będą generowane przez JS -->
                 </div>
                 <button id="add-round-btn" class="btn btn-primary w-full">Dodaj Wynik Rundy</button>
             </div>
-             <div class="mt-6 flex flex-col sm:flex-row gap-4">
-                <button id="new-game-btn" class="btn btn-secondary w-full">Nowa Gra</button>
-                <button id="back-to-menu-btn" class="btn btn-secondary w-full">Powrót do Menu Głównego</button>
-                <button id="game-to-stats-btn" class="btn btn-secondary w-full">Pokaż Statystyki</button>
+             <!-- ZMIENIONE PRZYCISKI -->
+             <div class="mt-4 flex flex-row gap-2">
+                <!-- PRZYCISK STATYSTYKI -->
+                <button id="game-to-stats-btn" class="btn btn-secondary w-1/2">Statystyki</button>
+                <!-- PRZYCISK POWRÓT DO MENU (TERAZ PEŁNI ROLĘ NOWEJ GRY) -->
+                <button id="back-to-menu-btn" class="btn bg-red-600 hover:bg-red-700 text-white w-1/2">Porzuć Grę / Nowa Gra</button>
             </div>
         </div>
 
         <!-- Ekran Statystyk -->
-        <div id="stats-screen" class="hidden card space-y-6">
-            <h2 class="text-2xl font-semibold text-center">Statystyki Gier (Współdzielone)</h2>
-            <p class="text-sm text-slate-400 text-center">Te statystyki są widoczne dla wszystkich użytkowników aplikacji.</p>
-            <div id="stats-summary" class="text-center bg-slate-700 p-4 rounded-lg">
+        <div id="stats-screen" class="hidden card space-y-3">
+            <h2 class="text-lg font-semibold text-center">Statystyki Gier</h2>
+            <div id="stats-summary" class="text-center bg-slate-700 p-3 rounded-lg">
                 <!-- Podsumowanie statystyk będzie generowane przez JS -->
             </div>
-            <div id="stats-history" class="space-y-4 max-h-96 overflow-y-auto pr-2">
+            <div id="stats-history" class="space-y-2 max-h-96 overflow-y-auto pr-2">
                 <!-- Historia gier będzie generowana przez JS -->
             </div>
-            <div class="flex flex-col sm:flex-row gap-4">
-                <button id="back-to-setup-btn" class="btn btn-primary w-full">Powrót do Menu</button>
+            <div class="flex flex-col sm:flex-row gap-2">
+                <button id="back-from-stats-btn" class="btn btn-primary w-full">Wróć</button>
                 <button id="clear-stats-btn" class="btn bg-red-600 hover:bg-red-700 text-white w-full">Wyczyść Statystyki</button>
             </div>
         </div>
 
-        <!-- Modal Zwycięzcy / Ostrzeżenia -->
-        <div id="action-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center p-4 z-50">
-            <div id="modal-content" class="modal text-center space-y-6 max-w-sm w-full">
-                <!-- Zawartość modala będzie dynamicznie ładowana -->
+        <!-- Modal Zwycięzcy -->
+        <div id="winner-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center p-4 z-40">
+            <div class="card text-center space-y-3 max-w-sm w-full">
+                <h2 class="text-xl font-bold text-teal-400">Koniec Gry!</h2>
+                <p id="winner-message" class="text-base"></p>
+                <div id="final-scores" class="text-left space-y-1 text-sm"></div>
+                <button id="modal-back-to-menu-btn" class="btn btn-primary w-full">Powrót do Menu</button>
+            </div>
+        </div>
+
+        <!-- Modal Potwierdzenia -->
+        <div id="confirm-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center p-4 z-50">
+            <div class="card text-center space-y-4 max-w-xs w-full">
+                <p id="confirm-message" class="text-base font-medium"></p>
+                <div class="flex gap-3 justify-center">
+                    <button id="confirm-yes-btn" class="btn bg-red-600 hover:bg-red-700 text-white w-1/2">Tak</button>
+                    <button id="confirm-no-btn" class="btn btn-secondary w-1/2">Anuluj</button>
+                </div>
             </div>
         </div>
 
     </div>
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { 
-        getFirestore, doc, setDoc, onSnapshot, collection, query, addDoc, getDocs, deleteDoc,
-        setLogLevel, orderBy
-    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-    // --- Globalne stałe wymagane przez środowisko Canvas ---
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-    const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-
+<script>
     // --- Referencje do elementów DOM ---
     const setupScreen = document.getElementById('setup-screen');
     const gameScreen = document.getElementById('game-screen');
     const statsScreen = document.getElementById('stats-screen');
-    const actionModal = document.getElementById('action-modal');
-    const modalContent = document.getElementById('modal-content');
-    const statusMessage = document.getElementById('status-message');
+    const winnerModal = document.getElementById('winner-modal');
+    
+    // Referencje dla Modala Potwierdzenia
+    const confirmModal = document.getElementById('confirm-modal');
+    const confirmMessage = document.getElementById('confirm-message');
+    const confirmYesBtn = document.getElementById('confirm-yes-btn');
+    const confirmNoBtn = document.getElementById('confirm-no-btn');
+
 
     const playerCountSelect = document.getElementById('player-count');
     const playerNamesContainer = document.getElementById('player-names-container');
     const startGameBtn = document.getElementById('start-game-btn');
     const showStatsBtn = document.getElementById('show-stats-btn');
+
     const scoreboard = document.getElementById('scoreboard');
     const scoreInputs = document.getElementById('score-inputs');
     const addRoundBtn = document.getElementById('add-round-btn');
-    const newGameBtn = document.getElementById('new-game-btn');
-    const backToMenuBtn = document.getElementById('back-to-menu-btn');
+    // const newGameBtn = document.getElementById('new-game-btn'); // USUNIĘTY
+    const backToMenuBtn = document.getElementById('back-to-menu-btn'); // PRZEJMUJE ROLĘ NOWEJ GRY
     const rotateFirstPlayerBtn = document.getElementById('rotate-first-player-btn');
     const gameToStatsBtn = document.getElementById('game-to-stats-btn');
+    
+    const roundHistoryContainer = document.getElementById('round-history-container');
+    
     const statsSummary = document.getElementById('stats-summary');
     const statsHistory = document.getElementById('stats-history');
-    const backToSetupBtn = document.getElementById('back-to-setup-btn');
+    const backFromStatsBtn = document.getElementById('back-from-stats-btn');
     const clearStatsBtn = document.getElementById('clear-stats-btn');
-    
-    // --- Stan Aplikacji (Synchronizowany) ---
-    let db, auth;
-    let currentUserId = null;
-    let isAuthReady = false;
-    
-    let statsData = {
-        totalGames: 0,
-        playerWins: {},
-        games: [], // Historia gier jest ładowana dynamicznie z kolekcji
-    };
-    
+
+    const winnerMessage = document.getElementById('winner-message');
+    const finalScores = document.getElementById('final-scores');
+    const modalBackToMenuBtn = document.getElementById('modal-back-to-menu-btn'); // PRZEJMUJE ROLĘ NOWEJ GRY W MODALU
+
+
+    // --- Stan Aplikacji ---
     let gameState = {
         players: [],
+        history: [], // Przechowuje wyniki rund
         isActive: false,
         firstPlayerIndex: 0,
-        gameId: null // Id dokumentu aktywnej gry
     };
 
-    // --- Ścieżki do Firestore (Zaktualizowane dla publicznych statystyk) ---
-    // Statystyki (Podsumowanie i Historia) będą publiczne i dostępne dla wszystkich
-    const PUBLIC_STATS_BASE_PATH = `artifacts/${appId}/public/data/tysiac_stats`;
-    const SUMMARY_DOC_PATH = () => doc(db, PUBLIC_STATS_BASE_PATH, 'summary');
-    const HISTORY_COLLECTION_PATH = () => collection(db, PUBLIC_STATS_BASE_PATH, 'history');
+    const GAME_STATE_KEY = 'tysiacGameState'; // Klucz do zapisu stanu gry
+    const STATS_KEY = 'tysiacGameStats'; // Klucz do zapisu statystyk
     
-    // Aktywna gra pozostaje prywatna dla każdego użytkownika
-    const ACTIVE_GAME_DOC_PATH = (userId) => doc(db, `artifacts/${appId}/users/${userId}/tysiac_active_game`, 'current');
+    // Lista domyślnych imion
+    const defaultPlayerNames = ['Kulik', 'Miś', 'Gracz 3', 'Gracz 4'];
 
-    // --- Funkcje Obsługujące Firestore ---
+    // --- Funkcje Główne ---
 
-    function saveGameState() {
-        if (!isAuthReady || !gameState.isActive) return;
-        try {
-            // Zapisuje stan aktywnej gry do prywatnego dokumentu 'current'
-            setDoc(ACTIVE_GAME_DOC_PATH(currentUserId), gameState);
-        } catch (error) {
-            console.error("Błąd zapisu stanu gry:", error);
-        }
-    }
-
-    function clearActiveGame() {
-        if (!isAuthReady) return;
-        try {
-            const emptyState = { players: [], isActive: false, firstPlayerIndex: 0, gameId: null };
-            // Czyści prywatny dokument aktywnej gry
-            setDoc(ACTIVE_GAME_DOC_PATH(currentUserId), emptyState);
-            gameState = emptyState; // Zresetuj stan lokalnie
-        } catch (error) {
-            console.error("Błąd czyszczenia stanu aktywnej gry:", error);
-        }
-    }
-
-    async function saveFinishedGame(winner) {
-        if (!isAuthReady) return;
-
-        try {
-            // 1. Zapisz grę do PUBLICZNEJ historii
-            await addDoc(HISTORY_COLLECTION_PATH(), {
-                date: new Date().toLocaleString('pl-PL'),
-                timestamp: Date.now(),
-                winner: winner.name,
-                players: gameState.players.map(p => ({ name: p.name, score: p.score })),
-            });
-
-            // 2. Zaktualizuj PUBLICZNE podsumowanie statystyk
-            const newTotalGames = statsData.totalGames + 1;
-            const newWins = { 
-                ...statsData.playerWins, 
-                [winner.name]: (statsData.playerWins[winner.name] || 0) + 1 
-            };
+    // Generuje pola na imiona graczy na podstawie wybranej liczby
+    function generatePlayerNameInputs() {
+        const count = parseInt(playerCountSelect.value, 10);
+        playerNamesContainer.innerHTML = '';
+        for (let i = 1; i <= count; i++) {
+            const defaultName = defaultPlayerNames[i - 1] || `Gracz ${i}`;
             
-            await setDoc(SUMMARY_DOC_PATH(), { 
-                totalGames: newTotalGames, 
-                playerWins: newWins 
-            }, { merge: true });
-
-            console.log("Gra i statystyki zapisane w publicznym Firestore.");
-        } catch (error) {
-            console.error("Błąd zapisu statystyk:", error);
-            showModal('Błąd zapisu', `Nie udało się zapisać statystyk: ${error.message}`, 'OK');
+            const div = document.createElement('div');
+            div.innerHTML = `
+                <label for="player${i}" class="block mb-1 text-sm font-medium text-slate-400">Imię gracza ${i}:</label>
+                <input type="text" id="player${i}" class="input-field" placeholder="Gracz ${i}" value="${defaultName}">
+            `;
+            playerNamesContainer.appendChild(div);
         }
     }
 
-    async function handleClearStats() {
-        if (!isAuthReady) return;
-        
-        const onConfirm = async () => {
-             try {
-                // 1. Usuń PUBLICZNY dokument podsumowania
-                await setDoc(SUMMARY_DOC_PATH(), { totalGames: 0, playerWins: {} });
-
-                // 2. Usuń PUBLICZNĄ kolekcję historii
-                const q = query(HISTORY_COLLECTION_PATH());
-                const snapshot = await getDocs(q);
-                const batch = [];
-                snapshot.forEach(doc => batch.push(deleteDoc(doc.ref)));
-                await Promise.all(batch);
-
-                // 3. Wyczyść PRYWATNĄ aktywną grę
-                await clearActiveGame();
-
-                console.log("Statystyki pomyślnie wyczyszczone.");
-            } catch (error) {
-                console.error("Błąd czyszczenia statystyk:", error);
-                showModal('Błąd', `Nie udało się wyczyścić statystyk: ${error.message}`, 'OK');
-            }
-        };
-
-        showConfirmationModal('Potwierdzenie', 'Czy na pewno chcesz usunąć wszystkie ZAPISANE WSPÓŁDZIELONE statystyki i Twoją aktywną grę? Tej operacji nie można cofnąć.', onConfirm);
-    }
-    
-    // --- Logika Gry (bez zmian) ---
-
+    // Rozpoczyna nową grę
     function startGame() {
-        if (!isAuthReady) return;
         const playerCount = parseInt(playerCountSelect.value, 10);
         const players = [];
         let hasValidNames = true;
@@ -314,27 +282,31 @@
         }
         
         if (!hasValidNames) {
-            showModal('Błąd', 'Wszystkie pola z imionami muszą być wypełnione.', 'Rozumiem');
+            showCustomAlert('Wszystkie pola z imionami muszą być wypełnione.');
             return;
         }
 
-        gameState = { players, isActive: true, firstPlayerIndex: 0, gameId: Date.now() };
-        saveGameState(); // Zapisz nowy stan do Firestore (prywatny)
+        gameState = { players, history: [], isActive: true, firstPlayerIndex: 0 };
+        saveGameState(); // Zapis stanu po starcie nowej gry
         renderGameScreen();
+        renderRoundHistory();
         
         setupScreen.classList.add('hidden');
         statsScreen.classList.add('hidden');
         gameScreen.classList.remove('hidden');
     }
 
+    // Dodaje punkty z rundy do ogólnego wyniku
     function addRoundScore() {
-        if (!gameState.isActive) return;
-
+        const roundScores = {};
         let scoresAdded = false;
+
         gameState.players.forEach((player, index) => {
             const input = document.getElementById(`score-input-${index}`);
             const scoreValue = parseInt(input.value, 10);
 
+            roundScores[player.name] = isNaN(scoreValue) ? 0 : scoreValue;
+            
             if (!isNaN(scoreValue) && scoreValue !== 0) {
                 player.score += scoreValue;
                 scoresAdded = true;
@@ -343,12 +315,55 @@
         });
 
         if (scoresAdded) {
+            gameState.history.unshift(roundScores);
+            
             updateScoreValues();
+            renderRoundHistory();
             checkWinner();
-            saveGameState(); // Zapisz zaktualizowany wynik (prywatny)
+            saveGameState(); // Zapis stanu po dodaniu rundy (Kluczowe dla trwałości)
         }
     }
 
+    // Renderuje tabelę historii rund
+    function renderRoundHistory() {
+        if (gameState.history.length === 0) {
+            roundHistoryContainer.innerHTML = '<p class="text-slate-500 text-xs text-center p-2">Brak dodanych rund.</p>';
+            return;
+        }
+
+        // 1. Nagłówki tabeli (Round + Player Names)
+        let headerHtml = '<tr><th class="w-1/6">Runda</th>';
+        gameState.players.forEach(p => {
+            // Skrócenie nazw w nagłówku tabeli, jeśli są za długie, by zmieścić się w mikro-tabeli
+            const displayName = p.name.length > 5 ? p.name.substring(0, 5) + '.' : p.name;
+            headerHtml += `<th class="whitespace-nowrap" title="${p.name}">${displayName}</th>`;
+        });
+        headerHtml += '</tr>';
+
+        // 2. Wiersze danych
+        let bodyHtml = '';
+        gameState.history.forEach((round, index) => {
+            const roundNumber = gameState.history.length - index;
+            let rowHtml = `<tr><td>${roundNumber}</td>`;
+            
+            gameState.players.forEach(p => {
+                const score = round[p.name] || 0;
+                rowHtml += `<td class="history-score">${score}</td>`;
+            });
+            rowHtml += '</tr>';
+            bodyHtml += rowHtml;
+        });
+
+        // 3. Złóż całą tabelę
+        roundHistoryContainer.innerHTML = `
+            <table>
+                <thead>${headerHtml}</thead>
+                <tbody>${bodyHtml}</tbody>
+            </table>
+        `;
+    }
+
+    // Sprawdza, czy któryś z graczy osiągnął 1000 punktów
     function checkWinner() {
         const potentialWinners = gameState.players.filter(p => p.score >= 1000);
 
@@ -358,69 +373,86 @@
         }
     }
 
-    async function endGame(winner) {
-        await saveFinishedGame(winner);
+    // Kończy grę i pokazuje modal zwycięzcy
+    function endGame(winner) {
+        saveStats(winner);
         
-        const finalScoresHtml = gameState.players
+        winnerMessage.textContent = `Wygrywa ${winner.name}! Gratulacje!`;
+        finalScores.innerHTML = '<h4>Końcowe wyniki:</h4>' + gameState.players
             .map(p => `<div class="flex justify-between"><span>${p.name}:</span><span class="font-semibold">${p.score} pkt</span></div>`)
             .join('');
 
-        const winnerContent = `
-            <h2 class="text-3xl font-bold text-teal-400">Koniec Gry!</h2>
-            <p class="text-xl">Wygrywa ${winner.name}! Gratulacje!</p>
-            <div class="text-left space-y-2">
-                <h4>Końcowe wyniki:</h4>
-                ${finalScoresHtml}
-            </div>
-            <button id="modal-new-game-btn" class="btn btn-primary w-full">Zagraj Ponownie</button>
-        `;
+        winnerModal.classList.remove('hidden');
+        winnerModal.classList.add('flex');
         
-        showModal('Zwycięzca', winnerContent);
-        document.getElementById('modal-new-game-btn').addEventListener('click', resetGame, { once: true });
-        
-        clearActiveGame(); // Usuń aktywny stan gry po zakończeniu (prywatny)
+        clearGameState(); // Czyści stan gry, bo gra się zakończyła
     }
     
+    // Zapisuje statystyki zakończonej gry
+    function saveStats(winner) {
+        const stats = getStats();
+        
+        const gameRecord = {
+            date: new Date().toLocaleString('pl-PL'),
+            winner: winner.name,
+            players: gameState.players.map(p => ({ name: p.name, score: p.score })),
+        };
+
+        stats.games.unshift(gameRecord);
+        
+        if (!stats.playerWins[winner.name]) {
+            stats.playerWins[winner.name] = 0;
+        }
+        stats.playerWins[winner.name]++;
+        stats.totalGames++;
+
+        localStorage.setItem(STATS_KEY, JSON.stringify(stats));
+    }
+    
+    // Resetuje grę, czyści stan i wyświetla ekran ustawień
     function resetGame() {
-        clearActiveGame();
-        // Wróć do menu głównego, reszta obsłuży się przez listener Firestore
+        clearGameState();
         gameScreen.classList.add('hidden');
         statsScreen.classList.add('hidden');
         setupScreen.classList.remove('hidden');
-        actionModal.classList.add('hidden');
-        actionModal.classList.remove('flex');
+        winnerModal.classList.add('hidden');
+        winnerModal.classList.remove('flex');
+        generatePlayerNameInputs();
     }
 
-    // --- Funkcje pomocnicze i renderujące (bez zmian) ---
+    // --- Funkcje pomocnicze i renderujące ---
 
     // Renderuje cały ekran gry (tablicę wyników i pola do wpisywania)
     function renderGameScreen() {
         scoreboard.innerHTML = '';
         scoreInputs.innerHTML = '';
         gameState.players.forEach((player, index) => {
+            // Tworzenie karty wyniku
             const scoreCard = document.createElement('div');
             scoreCard.className = 'card text-center';
             scoreCard.innerHTML = `
-                <div id="player-name-${index}" class="text-lg font-semibold flex items-center justify-center gap-2">${player.name}</div>
-                <div id="player-score-${index}" class="text-4xl font-bold text-teal-400 mt-2">${player.score}</div>
+                <div id="player-name-${index}" class="text-sm font-semibold flex items-center justify-center gap-1">${player.name}</div>
+                <div id="player-score-${index}" class="text-2xl font-bold text-teal-400 mt-1">${player.score}</div>
             `;
             scoreboard.appendChild(scoreCard);
 
+            // Tworzenie pola do wpisywania punktów
             const inputContainer = document.createElement('div');
             inputContainer.innerHTML = `
-                <label for="score-input-${index}" class="block mb-1 text-sm font-medium text-slate-400">${player.name}</label>
-                <input type="number" id="score-input-${index}" class="input-field text-center" placeholder="0">
+                <label for="score-input-${index}" class="block mb-1 text-xs font-medium text-slate-400">${player.name}</label>
+                <input type="number" id="score-input-${index}" class="input-field text-center text-sm" placeholder="0">
             `;
             scoreInputs.appendChild(inputContainer);
         });
         updateFirstPlayerMarker();
+        renderRoundHistory();
     }
 
     // Aktualizuje tylko wyświetlane wyniki na tablicy
     function updateScoreValues() {
         gameState.players.forEach((player, index) => {
             const scoreElement = document.getElementById(`player-score-${index}`);
-            if(scoreElement) scoreElement.textContent = player.score;
+            scoreElement.textContent = player.score;
         });
     }
     
@@ -430,14 +462,14 @@
             const nameElement = document.getElementById(`player-name-${index}`);
             if (!nameElement) return;
 
-            // Usuń istniejący znacznik
             const existingMarker = nameElement.querySelector('span');
-            if (existingMarker) existingMarker.remove();
+            if (existingMarker) {
+                existingMarker.remove();
+            }
 
-            // Dodaj nowy znacznik, jeśli to pierwszy gracz
             if (index === gameState.firstPlayerIndex) {
                 const marker = document.createElement('span');
-                marker.className = 'text-amber-400 text-base';
+                marker.className = 'text-amber-400 text-xs';
                 marker.title = 'Gracz rozpoczynający';
                 marker.innerHTML = '♛';
                 nameElement.appendChild(marker);
@@ -445,46 +477,43 @@
         });
     }
 
+    // Obraca gracza rozpoczynającego
     function rotateFirstPlayer() {
         if (!gameState.isActive) return;
         gameState.firstPlayerIndex = (gameState.firstPlayerIndex + 1) % gameState.players.length;
         updateFirstPlayerMarker();
-        saveGameState();
+        saveGameState(); // Zapis stanu po zmianie gracza rozpoczynającego (Kluczowe dla trwałości)
     }
-    
-    // Wyświetla ekran statystyk (pobiera dane publiczne)
+
+    // Wyświetla ekran statystyk
     function showStats() {
-        // --- Podsumowanie ---
-        const totalGames = statsData.totalGames;
-        let summaryHtml = `<p class="text-lg">Zagrano łącznie: <span class="font-bold text-teal-400">${totalGames}</span> gier</p>`;
-        const sortedWins = Object.entries(statsData.playerWins).sort(([,a],[,b]) => b-a);
+        const stats = getStats();
+
+        // Podsumowanie
+        let summaryHtml = `<p class="text-base">Zagrano łącznie: <span class="font-bold text-teal-400">${stats.totalGames}</span> gier</p>`;
+        const sortedWins = Object.entries(stats.playerWins).sort(([,a],[,b]) => b-a);
         
         if (sortedWins.length > 0) {
-            summaryHtml += `<h4 class="mt-4 mb-2 font-semibold">Ranking zwycięstw:</h4>`;
-            summaryHtml += `<div class="space-y-1">`
+            summaryHtml += `<h4 class="mt-3 mb-2 font-semibold text-sm">Ranking zwycięstw:</h4>`;
+            summaryHtml += `<div class="space-y-1 text-sm">`
             sortedWins.forEach(([name, wins]) => {
-                const winPercentage = totalGames > 0 ? ((wins / totalGames) * 100).toFixed(0) : 0;
+                const winPercentage = stats.totalGames > 0 ? ((wins / stats.totalGames) * 100).toFixed(0) : 0;
                 summaryHtml += `<div class="flex justify-center gap-2"><span>${name}:</span> <span class="font-semibold">${wins} wygrane (${winPercentage}%)</span></div>`;
             });
             summaryHtml += `</div>`
         }
         statsSummary.innerHTML = summaryHtml;
 
-        // --- Historia gier ---
+        // Historia gier
         statsHistory.innerHTML = '';
-        const historyGames = statsData.games;
-        if (historyGames.length === 0) {
-            statsHistory.innerHTML = '<p class="text-slate-400 text-center">Brak historii gier.</p>';
+        if (stats.games.length === 0) {
+            statsHistory.innerHTML = '<p class="text-slate-400 text-center text-sm">Brak historii gier.</p>';
         } else {
-            historyGames.forEach(game => {
+            stats.games.forEach(game => {
                 const gameDiv = document.createElement('div');
-                gameDiv.className = 'bg-slate-800 p-3 rounded-lg';
-                
-                // Zapewnienie, że gracze są posortowani
-                const playersSorted = game.players
-                    .sort((a,b) => b.score - a.score);
-                
-                let playersHtml = playersSorted
+                gameDiv.className = 'bg-slate-800 p-2 rounded-lg';
+                let playersHtml = game.players
+                    .sort((a,b) => b.score - a.score)
                     .map(p => `<li class="text-slate-300">${p.name}: <strong>${p.score}</strong></li>`).join('');
                 
                 gameDiv.innerHTML = `
@@ -495,7 +524,7 @@
                         </div>
                         <details class="text-xs text-right">
                             <summary class="cursor-pointer font-medium p-1">Wyniki</summary>
-                            <ul class="list-none mt-1 text-left">${playersHtml}</ul>
+                            <ul class="list-none mt-1 text-left text-xs">${playersHtml}</ul>
                         </details>
                     </div>
                 `;
@@ -507,191 +536,98 @@
         gameScreen.classList.add('hidden');
         statsScreen.classList.remove('hidden');
     }
-
-    // --- Funkcje do niestandardowych modali (bez zmian) ---
     
-    function showModal(title, content, buttonText = 'Zamknij') {
-        modalContent.innerHTML = `
-            <h2 class="text-2xl font-bold text-teal-400">${title}</h2>
-            ${content}
-            <button id="modal-close-btn" class="btn btn-secondary w-full mt-4">${buttonText}</button>
-        `;
-        actionModal.classList.remove('hidden');
-        actionModal.classList.add('flex');
-        document.getElementById('modal-close-btn').addEventListener('click', () => {
-            actionModal.classList.add('hidden');
-            actionModal.classList.remove('flex');
-        }, { once: true });
-    }
-
-    function showConfirmationModal(title, message, onConfirm) {
-        modalContent.innerHTML = `
-            <h2 class="text-2xl font-bold text-yellow-500">${title}</h2>
-            <p class="text-lg">${message}</p>
-            <div class="flex gap-4">
-                <button id="modal-confirm-btn" class="btn bg-red-600 hover:bg-red-700 text-white w-full">Tak, Potwierdzam</button>
-                <button id="modal-cancel-btn" class="btn btn-secondary w-full">Anuluj</button>
-            </div>
-        `;
-        actionModal.classList.remove('hidden');
-        actionModal.classList.add('flex');
-
-        const closeModal = () => {
-            actionModal.classList.add('hidden');
-            actionModal.classList.remove('flex');
-        };
-
-        document.getElementById('modal-confirm-btn').addEventListener('click', () => {
-            onConfirm();
-            closeModal();
-        }, { once: true });
-
-        document.getElementById('modal-cancel-btn').addEventListener('click', closeModal, { once: true });
-    }
-
-    // --- Inicjalizacja Firebase i Autoryzacja (bez zmian) ---
-    
-    function initializeApp() {
-        if (Object.keys(firebaseConfig).length === 0) {
-             statusMessage.textContent = 'Błąd konfiguracji: Brak danych Firebase.';
-             return;
-        }
-
-        try {
-            const app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            auth = getAuth(app);
-            setLogLevel('Debug');
-
-            // 1. Logowanie użytkownika (anonimowe/niestandardowe)
-            onAuthStateChanged(auth, async (user) => {
-                if (user) {
-                    currentUserId = user.uid;
-                    isAuthReady = true;
-                    statusMessage.textContent = `Połączono. ID: ${currentUserId}`;
-                    
-                    // Odblokuj przyciski
-                    startGameBtn.disabled = false;
-                    showStatsBtn.disabled = false;
-
-                    // 2. Nasłuchuj na bieżący stan gry (synchronizacja - prywatna)
-                    listenToGameState();
-                    
-                    // 3. Nasłuchuj na statystyki w czasie rzeczywistym (publiczne)
-                    listenToStats();
-
-                } else if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token.length > 0) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-            });
-
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token.length > 0) {
-                // Jeśli jest token, czekamy na onAuthStateChanged, ale możemy próbować zalogować
-                signInWithCustomToken(auth, __initial_auth_token).catch(e => {
-                     console.error("Błąd logowania custom tokenem. Próbuję anonimowo.", e);
-                     signInAnonymously(auth);
-                });
-            } else {
-                 signInAnonymously(auth).catch(e => {
-                     console.error("Błąd logowania anonimowego.", e);
-                });
-            }
-
-        } catch (error) {
-            console.error("Błąd inicjalizacji Firebase:", error);
-            statusMessage.textContent = `Błąd połączenia: ${error.message}`;
-        }
-    }
-    
-    // Nasłuchuje na PRYWATNY stan gry
-    function listenToGameState() {
-        // Używamy currentUserId, aby pobrać prywatny stan gry użytkownika
-        const docRef = ACTIVE_GAME_DOC_PATH(currentUserId);
-        onSnapshot(docRef, (doc) => {
-            if (doc.exists() && doc.data().isActive) {
-                // Załaduj aktywną grę
-                gameState = doc.data();
-                renderGameScreen();
-                // Przełącz widok na ekran gry
-                setupScreen.classList.add('hidden');
-                statsScreen.classList.add('hidden');
-                gameScreen.classList.remove('hidden');
-            } else {
-                // Brak aktywnej gry, wróć do ekranu ustawień
-                if (gameState.isActive) {
-                     // Tylko jeśli wcześniej była aktywna, a teraz nie ma jej w bazie
-                     gameState.isActive = false; 
-                     gameScreen.classList.add('hidden');
-                     setupScreen.classList.remove('hidden');
-                }
-            }
-        }, (error) => {
-            console.error("Błąd nasłuchiwania stanu gry:", error);
-        });
-    }
-
-    // Nasłuchuje na PUBLICZNE statystyki
-    function listenToStats() {
-        const summaryRef = SUMMARY_DOC_PATH();
-        // Nasłuchuj na publiczne podsumowanie
-        onSnapshot(summaryRef, (doc) => {
-            if (doc.exists()) {
-                statsData.totalGames = doc.data().totalGames || 0;
-                statsData.playerWins = doc.data().playerWins || {};
-            } else {
-                // Utwórz, jeśli dokument nie istnieje
-                setDoc(summaryRef, { totalGames: 0, playerWins: {} });
-            }
-            // Zawsze odśwież widok statystyk, jeśli jest aktywny
-            if (!statsScreen.classList.contains('hidden')) showStats();
-        }, (error) => {
-            console.error("Błąd nasłuchiwania publicznego podsumowania statystyk:", error);
-        });
-
-        // Nasłuchuj na publiczną historię gier
-        const historyRef = query(HISTORY_COLLECTION_PATH(), orderBy("timestamp", "desc"));
-        onSnapshot(historyRef, (snapshot) => {
-            statsData.games = [];
-            snapshot.forEach(doc => {
-                statsData.games.push({ id: doc.id, ...doc.data() });
-            });
-            // Zawsze odśwież widok statystyk, jeśli jest aktywny
-            if (!statsScreen.classList.contains('hidden')) showStats();
-        }, (error) => {
-            console.error("Błąd nasłuchiwania publicznej historii gier:", error);
-        });
-    }
-    
-    // --- Event Listeners (bez zmian) ---
-    
-    // Przełączanie ekranów
-    showStatsBtn.addEventListener('click', showStats);
-    gameToStatsBtn.addEventListener('click', showStats);
-    backToSetupBtn.addEventListener('click', () => {
+    // Obsługa powrotu ze statystyk do odpowiedniego widoku (gry lub menu)
+    function handleBackFromStats() {
         statsScreen.classList.add('hidden');
-        if(gameState.isActive) {
+        // Jeśli jest aktywna gra, wróć do niej, w przeciwnym razie do ustawień
+        if(localStorage.getItem(GAME_STATE_KEY)) {
             gameScreen.classList.remove('hidden');
         } else {
             setupScreen.classList.remove('hidden');
         }
-    });
+    }
+
+    function handleClearStats() {
+        showCustomConfirm('Czy na pewno chcesz usunąć wszystkie zapisane statystyki? Tej operacji nie można cofnąć.', () => {
+            localStorage.removeItem(STATS_KEY);
+            showStats();
+        });
+    }
+
+    // Obsługa przycisku "Powrót do Menu" / "Porzuć Grę"
+    function handleBackToMenu() {
+        if (gameState.isActive) {
+            showCustomConfirm('Czy na pewno chcesz porzucić obecną grę i wrócić do menu? Postęp nie zostanie zapisany w statystykach.', () => {
+                resetGame(); // resetGame czyści stan i wyświetla setup-screen
+            });
+        } else {
+             // Jeśli gra nie jest aktywna (np. na ekranie statystyk), po prostu wróć do menu
+             resetGame();
+        }
+    }
+
+    // --- Przechowywanie Danych (localStorage) ---
+    
+    // ZAPISUJE AKTUALNY STAN GRY
+    function saveGameState() {
+        // Zapisujemy tylko jeśli gra jest aktywna
+        if (gameState.isActive) {
+            localStorage.setItem(GAME_STATE_KEY, JSON.stringify(gameState));
+            // console.log("Game state saved.");
+        }
+    }
+
+    // ŁADUJE ZAPISANY STAN GRY
+    function loadGameState() {
+        const savedState = localStorage.getItem(GAME_STATE_KEY);
+        if (savedState) {
+            gameState = JSON.parse(savedState);
+            // PRZYWRACANIE WIDOKU GRY
+            if (gameState.isActive) {
+                renderGameScreen();
+                setupScreen.classList.add('hidden');
+                gameScreen.classList.remove('hidden');
+                // console.log("Game state loaded successfully.");
+                return true;
+            }
+        }
+        // console.log("No active game state found.");
+        return false;
+    }
+
+    function clearGameState() {
+        gameState.isActive = false;
+        localStorage.removeItem(GAME_STATE_KEY);
+        // console.log("Game state cleared.");
+    }
+    
+    function getStats() {
+        const savedStats = localStorage.getItem(STATS_KEY);
+        if (savedStats) {
+            return JSON.parse(savedStats);
+        }
+        return { totalGames: 0, playerWins: {}, games: [] };
+    }
+
+
+    // --- Event Listeners ---
+    
+    // Przełączanie ekranów
+    showStatsBtn.addEventListener('click', showStats);
+    gameToStatsBtn.addEventListener('click', showStats);
+    backFromStatsBtn.addEventListener('click', handleBackFromStats); // Zmienione na handleBackFromStats
 
     // Logika gry
     playerCountSelect.addEventListener('change', generatePlayerNameInputs);
     startGameBtn.addEventListener('click', startGame);
     addRoundBtn.addEventListener('click', addRoundScore);
     rotateFirstPlayerBtn.addEventListener('click', rotateFirstPlayer);
-    clearStatsBtn.addEventListener('click', handleClearStats);
     
-    newGameBtn.addEventListener('click', () => {
-        showConfirmationModal('Nowa Gra', 'Czy na pewno chcesz zakończyć obecną grę i zacząć nową? Postęp nie zostanie zapisany w statystykach.', resetGame);
-    });
-
-    backToMenuBtn.addEventListener('click', () => {
-         showConfirmationModal('Powrót do Menu', 'Czy na pewno chcesz porzucić obecną grę i wrócić do menu? Postęp nie zostanie zapisany.', resetGame);
-    });
+    // Użycie nowej, ujednoliconej funkcji obsługi powrotu do menu
+    backToMenuBtn.addEventListener('click', handleBackToMenu);
+    modalBackToMenuBtn.addEventListener('click', resetGame); // W modalu zwycięzcy od razu resetujemy grę
+    clearStatsBtn.addEventListener('click', handleClearStats);
 
     // Wciśnięcie Enter w polach wyników
     scoreInputs.addEventListener('keypress', function(e) {
@@ -700,23 +636,52 @@
         }
     });
 
-    // Wymuszenie generowania domyślnych pól na imiona
-    function generatePlayerNameInputs() {
-        const count = parseInt(playerCountSelect.value, 10);
-        playerNamesContainer.innerHTML = '';
-        for (let i = 1; i <= count; i++) {
-            const div = document.createElement('div');
-            div.innerHTML = `
-                <label for="player${i}" class="block mb-1 text-sm font-medium text-slate-400">Imię gracza ${i}:</label>
-                <input type="text" id="player${i}" class="input-field" placeholder="Gracz ${i}" value="Gracz ${i}">
-            `;
-            playerNamesContainer.appendChild(div);
-        }
+    // --- Funkcje do niestandardowych okienek (Zamiast alert/confirm) ---
+    function showCustomAlert(message) {
+        // Używamy własnego modala potwierdzenia jako alertu.
+        showCustomConfirm(message, () => {});
+    }
+
+    // Używa własnego modala zamiast natywnego confirm()
+    function showCustomConfirm(message, onConfirm) {
+        confirmMessage.textContent = message;
+        confirmModal.classList.add('flex');
+        confirmModal.classList.remove('hidden');
+
+        // Klonowanie przycisków w celu usunięcia starych listenerów
+        // To jest konieczne, aby funkcja onConfirm była wywołana tylko raz
+        const newConfirmYesBtn = confirmYesBtn.cloneNode(true);
+        const newConfirmNoBtn = confirmNoBtn.cloneNode(true);
+
+        confirmYesBtn.replaceWith(newConfirmYesBtn);
+        confirmNoBtn.replaceWith(newConfirmNoBtn);
+        
+        const closeModal = () => {
+            confirmModal.classList.add('hidden');
+            confirmModal.classList.remove('flex');
+        };
+
+        newConfirmYesBtn.addEventListener('click', () => {
+            closeModal();
+            onConfirm();
+        }, { once: true });
+
+        newConfirmNoBtn.addEventListener('click', () => {
+            closeModal();
+        }, { once: true });
+    }
+
+
+    // --- Inicjalizacja Aplikacji ---
+    
+    // 1. Spróbuj załadować zapisany stan gry
+    const gameLoaded = loadGameState();
+    
+    // 2. Jeśli nie ma aktywnej gry, wygeneruj pola na imiona
+    if (!gameLoaded) {
+        generatePlayerNameInputs();
     }
     
-    // --- Uruchomienie ---
-    generatePlayerNameInputs();
-    initializeApp();
 
 </script>
 </body>
