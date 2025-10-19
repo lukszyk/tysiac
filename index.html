@@ -43,6 +43,18 @@
         .btn-secondary:hover {
             background-color: #334155; /* slate-700 */
         }
+        /* Style dla nieaktywnego przycisku rotacji */
+        .btn-disabled {
+            background-color: #334155; /* slate-700 */
+            color: #94a3b8; /* slate-400 */
+            cursor: not-allowed;
+            opacity: 0.7;
+            pointer-events: none;
+        }
+        .btn-disabled:hover {
+            background-color: #334155;
+        }
+
         .input-field {
             width: 100%;
             background-color: #334155; /* slate-700 */
@@ -102,7 +114,6 @@
     <div class="w-full max-w-4xl mx-auto">
         <header class="text-center mb-4">
             <h5 class="text-2xl font-bold text-teal-400">Licznik Punktów - Tysiąc</h5>
-            
         </header>
 
         <!-- Ekran Ustawień Gry -->
@@ -133,14 +144,16 @@
                 <!-- Komunikaty będą wyświetlane tutaj -->
             </div>
             
-            <!-- NOWY KONTENER ŁĄCZĄCY INFO I PRZYCISK -->
+            <!-- KONTENER ŁĄCZĄCY INFO I PRZYCISK -->
             <div class="flex flex-col sm:flex-row justify-between items-center mb-4 gap-2">
                  <!-- INFORMACJE O RUNDZIE -->
                 <div id="round-info-display" class="bg-slate-700 p-2 rounded-lg text-center text-sm font-medium w-full sm:w-auto flex-grow">
                     <!-- Runda i Na Musiku będą tutaj (Renderowane przez JS) -->
                 </div>
                 <!-- PRZYCISK OBRACANIA GRACZA (Override) -->
-                <button id="rotate-first-player-btn" class="btn btn-secondary text-xs px-2 py-1 flex-shrink-0">Ręcznie obróć gracza rozpoczynającego ♛</button>
+                <button id="rotate-first-player-btn" class="btn btn-secondary text-xs px-2 py-1 flex-shrink-0">
+                    Ręcznie obróć gracza rozpoczynającego ♛
+                </button>
             </div>
             
             <!-- 3. AKTUALNY WYNIK GRACZY -->
@@ -246,7 +259,6 @@
 
     const modalBackToMenuBtn = document.getElementById('modal-back-to-menu-btn'); 
     
-    // NOWE REFERENCJE DLA PUNKTU 2
     const roundInfoDisplay = document.getElementById('round-info-display');
     const statusMessageContainer = document.getElementById('status-message-container');
 
@@ -257,6 +269,7 @@
         history: [], // Przechowuje wyniki rund
         isActive: false,
         firstPlayerIndex: 0,
+        initialFirstPlayerIndex: 0, // NOWY STAN: Index gracza, który zaczął RUNDĘ 1
     };
 
     const GAME_STATE_KEY = 'tysiacGameState'; 
@@ -266,7 +279,7 @@
 
     // --- Funkcje Główne ---
     
-    // NOWA FUNKCJA: Wyświetla tymczasowy komunikat (dla zaokrąglania)
+    // NOWA FUNKCJA: Wyświetla tymczasowy komunikat (dla zaokrąglania, 800+, błędów rotacji)
     let messageTimeout;
     function showTemporaryMessage(message, isError = false) {
         
@@ -282,7 +295,7 @@
         }, 5000); // Komunikat znika po 5 sekundach
     }
     
-    // NOWA FUNKCJA: Renderuje numer rundy i gracza "na musiku" (Point 2)
+    // NOWA FUNKCJA: Renderuje numer rundy i gracza "na musiku"
     function renderRoundInfo() {
         if (!gameState.isActive) return;
 
@@ -297,6 +310,18 @@
             <span class="text-slate-300 ml-4">Na musiku: </span>
             <span class="text-amber-400 font-bold">${firstPlayerName} ♛</span>
         `;
+        
+        // Aktualizacja stanu przycisku rotacji
+        const isRound1 = gameState.history.length === 0;
+        if (isRound1) {
+            rotateFirstPlayerBtn.classList.remove('btn-disabled');
+            rotateFirstPlayerBtn.disabled = false;
+            rotateFirstPlayerBtn.title = "Dostępne tylko w Rundzie 1.";
+        } else {
+            rotateFirstPlayerBtn.classList.add('btn-disabled');
+            rotateFirstPlayerBtn.disabled = true;
+            rotateFirstPlayerBtn.title = "Blokada: Dostępne tylko w Rundzie 1.";
+        }
     }
 
     // Funkcja do przeliczania wszystkich wyników na podstawie historii
@@ -312,18 +337,31 @@
             });
         });
         
-        // Ponowne ustawienie indeksu gracza rozpoczynającego na podstawie historii dla 2 graczy
-        // W przeciwnym razie przy cofaniu rund w grze na 2 graczy indeks by się nie zgadzał
+        // Ponowne ustawienie indeksu gracza rozpoczynającego na podstawie historii (tylko 2 graczy)
+        // Dla 3+ graczy rotacja jest sekwencyjna i nie da się jej odtworzyć tylko na podstawie historii
         if (gameState.players.length === 2) {
-             // Jeżeli historia ma parzystą długość (np. 0, 2, 4), następny jest Gracz 1 (index 0 - runda nieparzysta)
+            // Logika naprzemienności dla 2 graczy:
+            // Jeżeli historia ma parzystą długość (np. 0, 2, 4), następny jest Gracz 1 (index 0 - runda nieparzysta)
             if (gameState.history.length % 2 === 0) {
-                gameState.firstPlayerIndex = 0;
+                gameState.firstPlayerIndex = gameState.initialFirstPlayerIndex;
             } else {
-                // Jeżeli historia ma nieparzystą długość (np. 1, 3, 5), następny jest Gracz 2 (index 1 - runda parzysta)
-                gameState.firstPlayerIndex = 1; 
+                // Jeżeli historia ma nieparzystą długość (np. 1, 3, 5), następny jest Gracz 2
+                // Musimy odwrócić index startowy
+                gameState.firstPlayerIndex = (gameState.initialFirstPlayerIndex + 1) % 2; 
             }
+        } else {
+            // Dla 3+ graczy, rotacja jest cykliczna.
+            // Po cofnięciu rundy, gracz rozpoczynający powinien być ten, kto rozpoczynał cofniętą rundę.
+            // Biorąc pod uwagę, że to jest najnowsza runda w historii:
+            const totalRounds = gameState.history.length;
+            
+            // Oblicz, ile rotacji nastąpiło od startu (initialFirstPlayerIndex)
+            const rotations = totalRounds % gameState.players.length;
+            
+            // Ustaw firstPlayerIndex
+            gameState.firstPlayerIndex = (gameState.initialFirstPlayerIndex + rotations) % gameState.players.length;
         }
-        
+
         updateScoreValues();
         updateFirstPlayerMarker(); // Aktualizacja markera po recalculate (ważne przy cofaniu)
         renderRoundHistory();
@@ -336,7 +374,7 @@
         const roundScores = {};
         let scoresAdded = false;
         let validationFailed = false;
-        let roundingOccurred = false; // Nowa flaga dla punktu 1
+        let roundingOccurred = false; 
         let firstInput = document.getElementById('score-input-0'); 
 
         for (let i = 0; i < gameState.players.length; i++) {
@@ -406,15 +444,13 @@
             
             // --- NOWA IMPLEMENTACJA ROTACJI GRACZA ROZPOCZYNAJĄCEGO ---
             if (gameState.players.length === 2) {
-                // Logika naprzemienności dla 2 graczy:
-                // Jeżeli historia ma nieparzystą długość (np. 1, 3, 5 - koniec rundy nieparzystej), 
-                // następny jest Gracz 2 (index 1 - runda parzysta).
+                // Dla 2 graczy rotacja jest naprzemienna względem initialFirstPlayerIndex
                 if (gameState.history.length % 2 !== 0) {
-                    gameState.firstPlayerIndex = 1;
+                     // Runda parzysta (następny starter to (start + 1) % 2)
+                    gameState.firstPlayerIndex = (gameState.initialFirstPlayerIndex + 1) % 2;
                 } else { 
-                    // Jeżeli historia ma parzystą długość (np. 2, 4, 6 - koniec rundy parzystej), 
-                    // następny jest Gracz 1 (index 0 - runda nieparzysta).
-                    gameState.firstPlayerIndex = 0;
+                    // Runda nieparzysta (następny starter to initialFirstPlayerIndex)
+                    gameState.firstPlayerIndex = gameState.initialFirstPlayerIndex;
                 }
             } else {
                 // Standardowa rotacja cykliczna dla 3+ graczy
@@ -433,12 +469,12 @@
                  document.getElementById(`score-input-${index}`).value = '';
             });
             
-            // Komunikat o zaokrągleniu (Mitigacja dla Punktu 1)
+            // Komunikat o zaokrągleniu
             if (roundingOccurred) {
-                showTemporaryMessage('Uwaga: Wprowadzony wynik został zaokrąglony do najbliższej 10-tki zgodnie z zasadami gry. Sprawdź, czy nie pominięto zera!', false);
+                showTemporaryMessage('Uwaga: Wprowadzony wynik został zaokrąglony do najbliższej 10-tki zgodnie z zasadami gry.', false);
             }
             
-            // Aktualizacja informacji o rundzie
+            // Aktualizacja informacji o rundzie (w tym przycisku rotacji)
             renderRoundInfo(); 
         }
         
@@ -550,8 +586,10 @@
             const scoreClass = player.score >= 800 ? 'score-danger' : 'text-teal-400';
 
             scoreCard.innerHTML = `
-                <div id="player-name-${index}" class="text-sm font-semibold flex items-center justify-center gap-1">${player.name}</div>
-                <div id="player-score-${index}" class="text-3xl font-bold mt-1 ${scoreClass}">${player.score}</div> <!-- ZMIENIONO NA text-3xl -->
+                <div id="player-name-${index}" class="text-sm font-semibold flex items-center justify-center gap-1">
+                    ${player.name}
+                </div>
+                <div id="player-score-${index}" class="text-3xl font-bold mt-1 ${scoreClass}">${player.score}</div>
             `;
             scoreboard.appendChild(scoreCard);
 
@@ -574,7 +612,7 @@
         
         updateFirstPlayerMarker();
         renderRoundHistory();
-        renderRoundInfo(); // Wywołanie renderowania informacji o rundzie
+        renderRoundInfo(); // Wywołanie renderowania informacji o rundzie (i stanu przycisku rotacji)
         
         // Ustawienie focusu na pierwszym polu, gdy ekran się załaduje
         document.getElementById('score-input-0')?.focus(); 
@@ -596,7 +634,7 @@
             }
         });
     }
-
+    
     // --- Reszta niezmienionych funkcji pomocniczych i logiki gry ---
 
     function generatePlayerNameInputs() {
@@ -636,7 +674,14 @@
             return;
         }
 
-        gameState = { players, history: [], isActive: true, firstPlayerIndex: 0 };
+        // Ustawienie initialFirstPlayerIndex na 0 (lub to, co zostanie ustawione przez rotację, jeśli była przed startem)
+        gameState = { 
+            players, 
+            history: [], 
+            isActive: true, 
+            firstPlayerIndex: 0, 
+            initialFirstPlayerIndex: 0 // Zawsze zaczynamy od 0, chyba że rotacja zmieni go w 1. rundzie
+        };
         saveGameState(); 
         renderGameScreen();
         
@@ -646,8 +691,6 @@
     }
 
     function checkWinner() {
-        // Musimy przeliczyć, aby upewnić się, że po usunięciu rundy nadal mamy > 1000.
-        // Jeśli tak, bierzemy tego z najwyższą liczbą punktów.
         const potentialWinners = gameState.players.filter(p => p.score >= 1000);
 
         if (potentialWinners.length > 0) {
@@ -711,29 +754,46 @@
             if (!nameElement) return;
 
             // Usuń wszystkie istniejące markery
-            const existingMarker = nameElement.querySelector('span');
-            if (existingMarker) {
-                existingMarker.remove();
-            }
+            const existingMarkers = nameElement.querySelectorAll('span');
+            existingMarkers.forEach(marker => marker.remove());
 
+            // 1. Marker gracza rozpoczynającego obecną rundę (ruchomy)
             if (index === gameState.firstPlayerIndex) {
                 const marker = document.createElement('span');
-                marker.className = 'text-amber-400 text-xs ml-1'; // Dodano ml-1 dla odstępu
-                marker.title = 'Gracz rozpoczynający / Na musiku';
+                marker.className = 'text-amber-400 text-xs ml-1'; 
+                marker.title = 'Gracz rozpoczynający rundę / Na musiku';
                 marker.innerHTML = '♛';
                 nameElement.appendChild(marker);
+            }
+            
+            // 2. Marker gracza, który zaczął pierwszą rundę (stały)
+            if (index === gameState.initialFirstPlayerIndex) {
+                const markerStart = document.createElement('span');
+                markerStart.className = 'text-red-400 text-xs ml-1 font-bold'; 
+                markerStart.title = 'Gracz rozpoczynający RUNDĘ 1';
+                markerStart.innerHTML = '♛ START';
+                nameElement.appendChild(markerStart);
             }
         });
     }
 
     function rotateFirstPlayer() {
-        if (!gameState.isActive) return;
+        // BLOKADA: Zmiana dostępna tylko w Rundzie 1
+        if (gameState.history.length > 0) { 
+            showTemporaryMessage('Ręczna zmiana gracza rozpoczynającego jest możliwa tylko w Rundzie 1.', true);
+            return;
+        }
         
-        // Ręczny override - niezależny od liczby graczy, po prostu przechodzi do następnego w kolejce
+        if (!gameState.isActive || gameState.players.length < 2) return;
+        
+        // Ręczny override
         gameState.firstPlayerIndex = (gameState.firstPlayerIndex + 1) % gameState.players.length;
         
+        // Aktualizacja initialFirstPlayerIndex (ponieważ jest to Runda 1)
+        gameState.initialFirstPlayerIndex = gameState.firstPlayerIndex;
+        
         updateFirstPlayerMarker();
-        renderRoundInfo(); // Aktualizacja info o graczu 'na musiku'
+        renderRoundInfo(); 
         saveGameState(); 
     }
 
@@ -822,7 +882,14 @@
     function loadGameState() {
         const savedState = localStorage.getItem(GAME_STATE_KEY);
         if (savedState) {
-            gameState = JSON.parse(savedState);
+            const loadedState = JSON.parse(savedState);
+            // Upewnienie się, że nowy klucz jest zawsze obecny
+            if (typeof loadedState.initialFirstPlayerIndex === 'undefined') {
+                 loadedState.initialFirstPlayerIndex = loadedState.firstPlayerIndex || 0;
+            }
+            
+            gameState = loadedState;
+            
             if (gameState.players && gameState.players.length > 0) {
                 gameState.isActive = true; 
                 renderGameScreen();
@@ -837,7 +904,13 @@
     }
 
     function clearGameState() {
-        gameState = { players: [], history: [], isActive: false, firstPlayerIndex: 0 };
+        gameState = { 
+            players: [], 
+            history: [], 
+            isActive: false, 
+            firstPlayerIndex: 0, 
+            initialFirstPlayerIndex: 0 
+        };
         localStorage.removeItem(GAME_STATE_KEY);
     }
     
@@ -867,7 +940,6 @@
 
 
     // --- Funkcje do niestandardowych okienek (Alert/Confirm) ---
-    // Zachowane, aby nie zmieniać reszty kodu, która z nich korzysta (np. przy usuwaniu statystyk).
     let currentYesHandler = null;
     let currentNoHandler = null;
 
@@ -892,7 +964,6 @@
             confirmYesBtn.classList.remove('btn-primary', 'w-full');
         }
 
-        // 1. Usuwamy stare handlery, jeśli istnieją
         if (currentYesHandler) {
             confirmYesBtn.removeEventListener('click', currentYesHandler);
         }
@@ -903,11 +974,8 @@
         const cleanUp = () => {
             confirmModal.classList.add('hidden');
             confirmModal.classList.remove('flex');
-            // 3. Usuwamy nowe handlery po akcji/anulowaniu
             confirmYesBtn.removeEventListener('click', currentYesHandler);
             confirmNoBtn.removeEventListener('click', currentNoHandler);
-            
-            // Resetujemy stan przycisków
             confirmYesBtn.textContent = 'Tak';
         };
 
@@ -922,7 +990,6 @@
             cleanUp();
         };
         
-        // 2. Ustawiamy nowe handlery
         currentYesHandler = handleYes;
         currentNoHandler = handleNo;
         
