@@ -18,6 +18,13 @@
             border-radius: 0.75rem; /* rounded-xl */
             padding: 0.75rem; /* p-3 (0.75rem) */
             box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            transition: all 0.3s ease-in-out; /* Dodana płynna zmiana koloru */
+        }
+        /* Styl dla karty lidera */
+        .card.is-leader {
+            background-color: #78350f; /* amber-900 lub podobny dla ciemnego tła */
+            border: 2px solid #fcd34d; /* amber-300 */
+            box-shadow: 0 0 15px rgba(253, 230, 138, 0.4); /* Subtelny złoty blask */
         }
         .btn {
             display: inline-block;
@@ -106,6 +113,10 @@
         /* Dodatkowa klasa dla wyników 800+ */
         .score-danger {
             color: #ef4444; /* red-500 */
+        }
+        /* Styl dla wyniku ujemnego w historii */
+        .score-negative {
+            color: #f87171; /* red-400 */
         }
     </style>
 </head>
@@ -269,17 +280,22 @@
         history: [], // Przechowuje wyniki rund
         isActive: false,
         firstPlayerIndex: 0,
-        initialFirstPlayerIndex: 0, // NOWY STAN: Index gracza, który zaczął RUNDĘ 1
+        initialFirstPlayerIndex: 0, // Index gracza, który zaczął RUNDĘ 1
     };
 
     const GAME_STATE_KEY = 'tysiacGameState'; 
     const STATS_KEY = 'tysiacGameStats'; 
     
     const defaultPlayerNames = ['Kulik', 'Miś', 'Gracz 3', 'Gracz 4'];
+    
+    // Klasy do zarządzania podświetleniem lidera
+    const LEADER_CLASS = 'is-leader';
+    const DEFAULT_CARD_BG_CLASS = 'bg-slate-800'; 
+
 
     // --- Funkcje Główne ---
     
-    // NOWA FUNKCJA: Wyświetla tymczasowy komunikat (dla zaokrąglania, 800+, błędów rotacji)
+    // Wyświetla tymczasowy komunikat (dla zaokrąglania, 800+, błędów rotacji)
     let messageTimeout;
     function showTemporaryMessage(message, isError = false) {
         
@@ -295,7 +311,7 @@
         }, 5000); // Komunikat znika po 5 sekundach
     }
     
-    // NOWA FUNKCJA: Renderuje numer rundy i gracza "na musiku"
+    // Renderuje numer rundy i gracza "na musiku"
     function renderRoundInfo() {
         if (!gameState.isActive) return;
 
@@ -337,28 +353,16 @@
             });
         });
         
-        // Ponowne ustawienie indeksu gracza rozpoczynającego na podstawie historii (tylko 2 graczy)
-        // Dla 3+ graczy rotacja jest sekwencyjna i nie da się jej odtworzyć tylko na podstawie historii
+        // Ponowne ustawienie indeksu gracza rozpoczynającego na podstawie historii (automatyczna rotacja)
         if (gameState.players.length === 2) {
-            // Logika naprzemienności dla 2 graczy:
-            // Jeżeli historia ma parzystą długość (np. 0, 2, 4), następny jest Gracz 1 (index 0 - runda nieparzysta)
             if (gameState.history.length % 2 === 0) {
                 gameState.firstPlayerIndex = gameState.initialFirstPlayerIndex;
             } else {
-                // Jeżeli historia ma nieparzystą długość (np. 1, 3, 5), następny jest Gracz 2
-                // Musimy odwrócić index startowy
                 gameState.firstPlayerIndex = (gameState.initialFirstPlayerIndex + 1) % 2; 
             }
         } else {
-            // Dla 3+ graczy, rotacja jest cykliczna.
-            // Po cofnięciu rundy, gracz rozpoczynający powinien być ten, kto rozpoczynał cofniętą rundę.
-            // Biorąc pod uwagę, że to jest najnowsza runda w historii:
             const totalRounds = gameState.history.length;
-            
-            // Oblicz, ile rotacji nastąpiło od startu (initialFirstPlayerIndex)
             const rotations = totalRounds % gameState.players.length;
-            
-            // Ustaw firstPlayerIndex
             gameState.firstPlayerIndex = (gameState.initialFirstPlayerIndex + rotations) % gameState.players.length;
         }
 
@@ -382,59 +386,59 @@
             const input = document.getElementById(`score-input-${i}`);
             let scoreValue = parseInt(input.value, 10);
             
-            const isInputNonZero = !isNaN(scoreValue) && scoreValue !== 0; 
-            let finalRoundScore = 0;
+            // Traktuj puste pole jako 0
+            if (isNaN(scoreValue) || input.value.trim() === '') {
+                scoreValue = 0; 
+            }
+            
+            let finalRoundScore = scoreValue;
 
-            if (isInputNonZero) {
-                // --- Krok 1: Wymuszenie zaokrąglenia do 10 i minimum 10 ---
-                let roundedScore = Math.round(scoreValue / 10) * 10;
-                
-                // Sprawdź, czy nastąpiło zaokrąglenie (jeśli różnica jest większa niż 0)
-                if (roundedScore !== scoreValue) {
-                    roundingOccurred = true;
-                }
-                
-                if (roundedScore === 0) {
-                    // Wpisanie 1-4. Mniej niż 10, więc ustawiamy 0.
-                    input.value = '0';
-                    finalRoundScore = 0;
-                } else {
-                    // Właściwe zaokrąglenie (np. 12 -> 10, 17 -> 20)
-                    input.value = roundedScore; // Aktualizacja pola na ekranie
-                    finalRoundScore = roundedScore;
-                }
-                
-                // --- Krok 2: Walidacja 800+ punktów (cicha) ---
-                if (player.score >= 800 && finalRoundScore > 0 && finalRoundScore < 100) {
+            if (scoreValue !== 0) {
+                // --- Walidacja 800+ (tylko dla punktów dodatnich) ---
+                // Walidacja dotyczy tylko dodatnich punktów, ujemne punkty (kary) są zawsze dozwolone.
+                if (player.score >= 800 && scoreValue > 0 && scoreValue < 100) {
                     validationFailed = true;
-                    // Resetuj pole gracza, który złamał zasadę 800+ (ciche odrzucenie)
-                    input.value = '0'; 
+                    // Resetuj pole gracza, który złamał zasadę 800+
+                    input.value = ''; 
                     break; // Przerwij pętlę i całą operację
                 }
                 
-                if (finalRoundScore > 0) {
-                    scoresAdded = true;
+                // --- Zaokrąglenie do 10 (tylko dla punktów dodatnich) ---
+                if (scoreValue > 0) {
+                    let roundedScore = Math.round(scoreValue / 10) * 10;
+                    
+                    if (roundedScore !== scoreValue) {
+                        roundingOccurred = true;
+                    }
+                    
+                    if (roundedScore === 0 && scoreValue > 0) {
+                         // Jeśli wpisano np. 1-4, zaokrąglenie daje 0
+                         finalRoundScore = 0;
+                    } else {
+                        finalRoundScore = roundedScore;
+                    }
+                    
+                    input.value = finalRoundScore; // Aktualizacja pola na ekranie (opcjonalnie)
                 }
                 
-            } else {
-                 // Jeśli input to NaN lub 0, finalRoundScore pozostaje 0
+                scoresAdded = true;
             }
 
-            // Dodanie punktów do tymczasowego obiektu
+            // Dodanie punktów (nawet 0 lub ujemnych) do tymczasowego obiektu
             roundScores[player.name] = finalRoundScore;
         }
 
         if (validationFailed) {
             // Komunikat o niepowodzeniu walidacji 800+
-            showTemporaryMessage('Gracz z wynikiem 800+ musi ugrać minimum 100 punktów. Runda nie została dodana.', true);
+            showTemporaryMessage('Gracz z wynikiem 800+ musi ugrać minimum 100 punktów (dla punktów dodatnich). Runda nie została dodana.', true);
             if (firstInput) {
                 firstInput.focus();
             }
             return;
         }
         
-        // Tylko jeśli dodano jakiekolwiek punkty
-        if (scoresAdded) {
+        // Zawsze dodajemy rundę, nawet jeśli wszystkie wyniki to 0
+        if (true) { 
             // Dodaj punkty do głównego stanu graczy 
             gameState.players.forEach(player => {
                 player.score += roundScores[player.name];
@@ -442,24 +446,20 @@
             
             gameState.history.unshift(roundScores);
             
-            // --- NOWA IMPLEMENTACJA ROTACJI GRACZA ROZPOCZYNAJĄCEGO ---
+            // --- IMPLEMENTACJA ROTACJI GRACZA ROZPOCZYNAJĄCEGO ---
             if (gameState.players.length === 2) {
-                // Dla 2 graczy rotacja jest naprzemienna względem initialFirstPlayerIndex
                 if (gameState.history.length % 2 !== 0) {
-                     // Runda parzysta (następny starter to (start + 1) % 2)
                     gameState.firstPlayerIndex = (gameState.initialFirstPlayerIndex + 1) % 2;
                 } else { 
-                    // Runda nieparzysta (następny starter to initialFirstPlayerIndex)
                     gameState.firstPlayerIndex = gameState.initialFirstPlayerIndex;
                 }
             } else {
-                // Standardowa rotacja cykliczna dla 3+ graczy
                 gameState.firstPlayerIndex = (gameState.firstPlayerIndex + 1) % gameState.players.length;
             }
             // -----------------------------------------------------------------
             
             updateScoreValues();
-            updateFirstPlayerMarker(); // Aktualizacja markera po rotacji
+            updateFirstPlayerMarker(); 
             renderRoundHistory();
             checkWinner();
             saveGameState();
@@ -469,16 +469,14 @@
                  document.getElementById(`score-input-${index}`).value = '';
             });
             
-            // Komunikat o zaokrągleniu
             if (roundingOccurred) {
-                showTemporaryMessage('Uwaga: Wprowadzony wynik został zaokrąglony do najbliższej 10-tki zgodnie z zasadami gry.', false);
+                showTemporaryMessage('Uwaga: Wprowadzony wynik dodatni został zaokrąglony do najbliższej 10-tki zgodnie z zasadami gry.', false);
             }
             
-            // Aktualizacja informacji o rundzie (w tym przycisku rotacji)
             renderRoundInfo(); 
         }
         
-        // Ustawienie focusu na pierwszym polu, jeśli nie było błędów
+        // Ustawienie focusu na pierwszym polu
         if (firstInput) {
             firstInput.focus();
         }
@@ -503,13 +501,14 @@
         // 2. Wiersze danych
         let bodyHtml = '';
         gameState.history.forEach((round, index) => {
-            // index jest pozycją w tablicy history (0 = najnowsza)
             const roundNumber = gameState.history.length - index;
             let rowHtml = `<tr id="history-row-${index}"><td>${roundNumber}</td>`;
             
             gameState.players.forEach(p => {
                 const score = round[p.name] || 0;
-                rowHtml += `<td class="history-score">${score}</td>`;
+                // Dodanie klasy dla wyników ujemnych
+                const scoreClass = score < 0 ? 'score-negative' : 'history-score';
+                rowHtml += `<td class="${scoreClass}">${score}</td>`;
             });
 
             // Przycisk Usuń
@@ -540,13 +539,8 @@
     }
 
     function deleteRound(historyIndex) {
-        // Usuń rundę z historii
         gameState.history.splice(historyIndex, 1); 
-
-        // Przelicz wszystkie wyniki od nowa i zaktualizuj ekran
         recalculateScores();
-
-        // Sprawdź stan gry
         checkWinner(); 
     }
     
@@ -580,7 +574,8 @@
         gameState.players.forEach((player, index) => {
             // Tworzenie karty wyniku
             const scoreCard = document.createElement('div');
-            scoreCard.className = 'card text-center';
+            // Nadajemy jej domyślne klasy i klasę 'card' zdefiniowaną w CSS
+            scoreCard.className = 'card text-center'; 
             
             // Kolor wyniku
             const scoreClass = player.score >= 800 ? 'score-danger' : 'text-teal-400';
@@ -589,6 +584,7 @@
                 <div id="player-name-${index}" class="text-sm font-semibold flex items-center justify-center gap-1">
                     ${player.name}
                 </div>
+                <!-- WAŻNA ZMIANA: Początkowy wynik musi być wstawiony tutaj -->
                 <div id="player-score-${index}" class="text-3xl font-bold mt-1 ${scoreClass}">${player.score}</div>
             `;
             scoreboard.appendChild(scoreCard);
@@ -610,27 +606,48 @@
             inputField.addEventListener('keydown', handleInputKeydown);
         });
         
-        updateFirstPlayerMarker();
+        updateScoreValues(); // Uruchamiamy, by ustawić podświetlenie
+        updateFirstPlayerMarker(); 
         renderRoundHistory();
-        renderRoundInfo(); // Wywołanie renderowania informacji o rundzie (i stanu przycisku rotacji)
+        renderRoundInfo(); 
         
-        // Ustawienie focusu na pierwszym polu, gdy ekran się załaduje
         document.getElementById('score-input-0')?.focus(); 
     }
 
-    // Aktualizuje tylko wyświetlane wyniki na tablicy
+    // Aktualizuje tylko wyświetlane wyniki na tablicy (NAPRAWIONA WERSJA)
     function updateScoreValues() {
+        // Ustalenie lidera
+        const maxScore = Math.max(...gameState.players.map(p => p.score));
+        
         gameState.players.forEach((player, index) => {
             const scoreElement = document.getElementById(`player-score-${index}`);
-            scoreElement.textContent = player.score;
+            // Pobrana karta gracza z tablicy wyników
+            const cardElement = scoreboard.children[index]; 
             
-            // Zmiana koloru na czerwony przy 800+
-            if (player.score >= 800) {
-                scoreElement.classList.add('score-danger');
-                scoreElement.classList.remove('text-teal-400');
-            } else {
-                scoreElement.classList.remove('score-danger');
-                scoreElement.classList.add('text-teal-400');
+            if (scoreElement) {
+                // *** KLUCZOWA POPRAWKA: Ustawienie wartości tekstowej wyniku gracza ***
+                scoreElement.textContent = player.score; 
+
+                // 1. Zmiana koloru tekstu wyniku (800+)
+                if (player.score >= 800) {
+                    scoreElement.classList.add('score-danger');
+                    scoreElement.classList.remove('text-teal-400');
+                } else {
+                    scoreElement.classList.remove('score-danger');
+                    scoreElement.classList.add('text-teal-400');
+                }
+            }
+            
+            // 2. Podświetlenie Lidera
+            // Gracz jest liderem, jeśli jego wynik jest równy maksymalnemu i większy od 0 
+            const isLeader = player.score === maxScore && maxScore > 0;
+            
+            // Zresetuj klasy na karcie
+            if (cardElement) {
+                cardElement.classList.remove(LEADER_CLASS); 
+                if (isLeader) {
+                    cardElement.classList.add(LEADER_CLASS); 
+                }
             }
         });
     }
@@ -674,13 +691,12 @@
             return;
         }
 
-        // Ustawienie initialFirstPlayerIndex na 0 (lub to, co zostanie ustawione przez rotację, jeśli była przed startem)
         gameState = { 
             players, 
             history: [], 
             isActive: true, 
             firstPlayerIndex: 0, 
-            initialFirstPlayerIndex: 0 // Zawsze zaczynamy od 0, chyba że rotacja zmieni go w 1. rundzie
+            initialFirstPlayerIndex: 0 // Ustawia, kto zaczął RUNDĘ 1
         };
         saveGameState(); 
         renderGameScreen();
@@ -694,6 +710,7 @@
         const potentialWinners = gameState.players.filter(p => p.score >= 1000);
 
         if (potentialWinners.length > 0) {
+            // W przypadku remisu powyżej 1000, wygrywa gracz, który ma więcej punktów
             const winner = potentialWinners.reduce((prev, current) => (prev.score > current.score) ? prev : current);
             endGame(winner);
         }
@@ -753,27 +770,21 @@
             const nameElement = document.getElementById(`player-name-${index}`);
             if (!nameElement) return;
 
-            // Usuń wszystkie istniejące markery
-            const existingMarkers = nameElement.querySelectorAll('span');
-            existingMarkers.forEach(marker => marker.remove());
+            // Wyczyść wszystkie markery
+            let markersHtml = '';
 
             // 1. Marker gracza rozpoczynającego obecną rundę (ruchomy)
             if (index === gameState.firstPlayerIndex) {
-                const marker = document.createElement('span');
-                marker.className = 'text-amber-400 text-xs ml-1'; 
-                marker.title = 'Gracz rozpoczynający rundę / Na musiku';
-                marker.innerHTML = '♛';
-                nameElement.appendChild(marker);
+                markersHtml += '<span class="text-amber-400 text-xs ml-1" title="Gracz rozpoczynający rundę / Na musiku">♛</span>';
             }
             
             // 2. Marker gracza, który zaczął pierwszą rundę (stały)
             if (index === gameState.initialFirstPlayerIndex) {
-                const markerStart = document.createElement('span');
-                markerStart.className = 'text-red-400 text-xs ml-1 font-bold'; 
-                markerStart.title = 'Gracz rozpoczynający RUNDĘ 1';
-                markerStart.innerHTML = '♛ START';
-                nameElement.appendChild(markerStart);
+                markersHtml += '<span class="text-red-400 text-xs ml-1 font-bold" title="Gracz rozpoczynający RUNDĘ 1">♛ START</span>';
             }
+            
+            nameElement.innerHTML = `${player.name} ${markersHtml}`;
+
         });
     }
 
@@ -883,7 +894,6 @@
         const savedState = localStorage.getItem(GAME_STATE_KEY);
         if (savedState) {
             const loadedState = JSON.parse(savedState);
-            // Upewnienie się, że nowy klucz jest zawsze obecny
             if (typeof loadedState.initialFirstPlayerIndex === 'undefined') {
                  loadedState.initialFirstPlayerIndex = loadedState.firstPlayerIndex || 0;
             }
@@ -944,7 +954,7 @@
     let currentNoHandler = null;
 
     function showCustomAlert(message) {
-        showCustomConfirm(message, () => {}, false); // Użycie jako alert
+        showCustomConfirm(message, () => {}, false); 
     }
 
     function showCustomConfirm(message, onConfirm, showNoButton = true) {
@@ -952,7 +962,6 @@
         confirmModal.classList.add('flex');
         confirmModal.classList.remove('hidden');
         
-        // Zarządzanie widocznością przycisków
         confirmNoBtn.classList.toggle('hidden', !showNoButton);
         if (!showNoButton) {
             confirmYesBtn.textContent = 'OK';
