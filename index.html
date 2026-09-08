@@ -278,7 +278,6 @@
                 scoreValue = 0; 
             }
 
-            // POPRAWKA 2: Limit punktów w jednej rundzie (max 360)
             if (Math.abs(scoreValue) > 360) {
                 showTemporaryMessage(`Błąd: Maksymalna liczba punktów w rundzie to 360. Gracz "${player.name}" ma wpisane ${scoreValue}.`, true);
                 input.focus();
@@ -422,7 +421,6 @@
         document.getElementById('score-input-0')?.focus(); 
     }
 
-    // POPRAWKA 1: Brak wyróżnienia lidera – tylko zmiana koloru przy 800+
     function updateScoreValues() {
         gameState.players.forEach((player, index) => {
             const scoreElement = document.getElementById(`player-score-${index}`);
@@ -439,7 +437,6 @@
         });
     }
 
-    // Oznaczenie tylko gracza na musiku
     function updateFirstPlayerMarker() {
         gameState.players.forEach((player, index) => {
             const nameElement = document.getElementById(`player-name-${index}`);
@@ -507,7 +504,6 @@
         }
     }
 
-    // POPRAWKA 3: Wyczyszczenie zapisu statystyk – czysty licznik
     function endGame(winner) {
         document.getElementById('winner-message').textContent = `Wygrywa ${winner.name}! Gratulacje!`;
         document.getElementById('final-scores').innerHTML = '<h4>Końcowe wyniki:</h4>' + [...gameState.players]
@@ -627,6 +623,14 @@
         confirmYesBtn.addEventListener('click', currentYesHandler);
         confirmNoBtn.addEventListener('click', currentNoHandler);
     }
+
+    // REJESTRACJA ZDARZEŃ (EVENT LISTENERS)
+    playerCountSelect.addEventListener('change', generatePlayerNameInputs);
+    startGameBtn.addEventListener('click', startGame);
+    addRoundBtn.addEventListener('click', addRoundScore);
+    backToMenuBtn.addEventListener('click', handleBackToMenu);
+    rotateFirstPlayerBtn.addEventListener('click', rotateFirstPlayer);
+    modalBackToMenuBtn.addEventListener('click', resetGame);
 
     // Inicjalizacja
     if (!loadGameState()) {
