@@ -15,25 +15,19 @@
         }
         .card {
             background-color: #1e293b; /* slate-800 */
-            border-radius: 0.75rem; /* rounded-xl */
-            padding: 0.75rem; /* p-3 (0.75rem) */
+            border-radius: 0.75rem;
+            padding: 0.75rem;
             box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-            transition: all 0.3s ease-in-out; /* Dodana płynna zmiana koloru */
-        }
-        /* Styl dla karty lidera */
-        .card.is-leader {
-            background-color: #78350f; /* amber-900 lub podobny dla ciemnego tła */
-            border: 2px solid #fcd34d; /* amber-300 */
-            box-shadow: 0 0 15px rgba(253, 230, 138, 0.4); /* Subtelny złoty blask */
+            transition: all 0.2s ease-in-out;
         }
         .btn {
             display: inline-block;
-            padding: 0.4rem 0.8rem;
+            padding: 0.5rem 1rem;
             border-radius: 0.5rem;
             font-weight: 600;
-            font-size: 0.875rem; /* text-sm */
+            font-size: 0.875rem;
             text-align: center;
-            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+            transition: background-color 0.2s ease-in-out;
             cursor: pointer;
         }
         .btn-primary {
@@ -45,28 +39,23 @@
         }
         .btn-secondary {
             background-color: #475569; /* slate-600 */
-            color: #f1f5f9; /* slate-100 */
+            color: #f1f5f9;
         }
         .btn-secondary:hover {
-            background-color: #334155; /* slate-700 */
+            background-color: #334155;
         }
-        /* Style dla nieaktywnego przycisku rotacji */
         .btn-disabled {
-            background-color: #334155; /* slate-700 */
-            color: #94a3b8; /* slate-400 */
+            background-color: #334155;
+            color: #94a3b8;
             cursor: not-allowed;
             opacity: 0.7;
             pointer-events: none;
         }
-        .btn-disabled:hover {
-            background-color: #334155;
-        }
-
         .input-field {
             width: 100%;
-            background-color: #334155; /* slate-700 */
-            border: 1px solid #475569; /* slate-600 */
-            color: #f1f5f9; /* slate-100 */
+            background-color: #334155;
+            border: 1px solid #475569;
+            color: #f1f5f9;
             padding: 0.4rem;
             border-radius: 0.5rem;
             transition: border-color 0.2s, box-shadow 0.2s;
@@ -84,12 +73,10 @@
         input[type=number] {
             -moz-appearance: textfield;
         }
-        
-        /* STYLES DLA MIKRO-HISTORII */
         #round-history-container table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.75rem; /* text-xs */
+            font-size: 0.75rem;
         }
         #round-history-container th, #round-history-container td {
             padding: 0.3rem 0.2rem;
@@ -110,11 +97,9 @@
             font-weight: 600;
             color: #14b8aa;
         }
-        /* Dodatkowa klasa dla wyników 800+ */
         .score-danger {
-            color: #ef4444; /* red-500 */
+            color: #ef4444; /* red-500 dla 800+ */
         }
-        /* Styl dla wyniku ujemnego w historii */
         .score-negative {
             color: #f87171; /* red-400 */
         }
@@ -124,7 +109,7 @@
 
     <div class="w-full max-w-4xl mx-auto">
         <header class="text-center mb-4">
-            <h5 class="text-2xl font-bold text-teal-400">Licznik Punktów - Tysiąc</h5>
+            <h1 class="text-2xl font-bold text-teal-400">Licznik Punktów - Tysiąc</h1>
         </header>
 
         <!-- Ekran Ustawień Gry -->
@@ -138,77 +123,35 @@
                     <option value="4">4 gracze</option>
                 </select>
             </div>
-            <div id="player-names-container" class="space-y-2">
-                <!-- Pola na imiona graczy będą generowane przez JS -->
-            </div>
-            <div class="flex flex-col sm:flex-row gap-2">
-                <button id="start-game-btn" class="btn btn-primary w-full">Rozpocznij Grę</button>
-                <button id="show-stats-btn" class="btn btn-secondary w-full">Pokaż Statystyki</button>
-            </div>
+            <div id="player-names-container" class="space-y-2"></div>
+            <button id="start-game-btn" class="btn btn-primary w-full">Rozpocznij Grę</button>
         </div>
 
         <!-- Ekran Gry -->
         <div id="game-screen" class="hidden">
+            <div id="status-message-container" class="text-center mb-4"></div>
             
-            <!-- KONTENER NA KOMUNIKATY (dla zaokrąglania i 800+) -->
-            <div id="status-message-container" class="text-center mb-4">
-                <!-- Komunikaty będą wyświetlane tutaj -->
-            </div>
-            
-            <!-- KONTENER ŁĄCZĄCY INFO I PRZYCISK -->
             <div class="flex flex-col sm:flex-row justify-between items-center mb-4 gap-2">
-                 <!-- INFORMACJE O RUNDZIE -->
-                <div id="round-info-display" class="bg-slate-700 p-2 rounded-lg text-center text-sm font-medium w-full sm:w-auto flex-grow">
-                    <!-- Runda i Na Musiku będą tutaj (Renderowane przez JS) -->
-                </div>
-                <!-- PRZYCISK OBRACANIA GRACZA (Override) -->
+                <div id="round-info-display" class="bg-slate-700 p-2 rounded-lg text-center text-sm font-medium w-full sm:w-auto flex-grow"></div>
                 <button id="rotate-first-player-btn" class="btn btn-secondary text-xs px-2 py-1 flex-shrink-0">
                     Ręcznie obróć gracza rozpoczynającego ♛
                 </button>
             </div>
             
-            <!-- 3. AKTUALNY WYNIK GRACZY -->
-            <div id="scoreboard" class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
-                <!-- Wyniki graczy będą generowane przez JS -->
-            </div>
+            <div id="scoreboard" class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4"></div>
             
-            <!-- 2. DODAJ PUNKTY ZA RUNDĘ -->
             <div class="card space-y-3 mb-4">
                 <h3 class="text-base font-semibold">Dodaj punkty za rundę:</h3>
-                <div id="score-inputs" class="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    <!-- Pola do wpisywania punktów będą generowane przez JS -->
-                </div>
+                <div id="score-inputs" class="grid grid-cols-2 md:grid-cols-4 gap-2"></div>
                 <button id="add-round-btn" class="btn btn-primary w-full">Dodaj Wynik Rundy</button>
             </div>
 
-            <!-- 4. SEKCJA: Historia Rund (Zmniejszona) -->
             <div class="card mb-4">
-                <h3 class="text-sm font-semibold mb-2">Historia Rund (Usuń wpis):</h3>
-                <div id="round-history-container" class="max-h-32 overflow-y-auto">
-                    <!-- Tabela Historii Rund będzie generowana przez JS -->
-                </div>
+                <h3 class="text-sm font-semibold mb-2">Historia Rund:</h3>
+                <div id="round-history-container" class="max-h-36 overflow-y-auto"></div>
             </div>
 
-            <!-- 5. ZMIENIONE PRZYCISKI -->
-             <div class="flex flex-row gap-2">
-                <button id="game-to-stats-btn" class="btn btn-secondary w-1/2">Statystyki</button>
-                <button id="back-to-menu-btn" class="btn bg-red-600 hover:bg-red-700 text-white w-1/2">Porzuć Grę / Nowa Gra</button>
-            </div>
-        </div>
-
-        <!-- Ekran Statystyk -->
-        <div id="stats-screen" class="hidden card space-y-3">
-            <h2 class="text-lg font-semibold text-center">Statystyki Gier</h2>
-            <div id="stats-summary" class="text-center bg-slate-700 p-3 rounded-lg">
-                <!-- Podsumowanie statystyk będzie generowane przez JS -->
-            </div>
-            <div id="stats-history" class="space-y-2 max-h-96 overflow-y-auto pr-2">
-                <!-- Historia gier będzie generowana przez JS -->
-            </div>
-            <div class="flex flex-col sm:flex-row gap-2">
-                <button id="back-from-stats-btn" class="btn btn-primary w-full">Wróć</button>
-                <button id="clear-stats-btn" class="btn bg-red-600 hover:bg-red-700 text-white w-full">Wyczyść Statystyki</button>
-            </div>
+            <button id="back-to-menu-btn" class="btn bg-red-600 hover:bg-red-700 text-white w-full">Porzuć Grę / Nowa Gra</button>
         </div>
 
         <!-- Modal Zwycięzcy -->
@@ -231,19 +174,13 @@
                 </div>
             </div>
         </div>
-        
-        <!-- Modal Alerty (Używamy confirm-modal jako alertu) -->
-
     </div>
 
 <script>
-    // --- Referencje do elementów DOM ---
     const setupScreen = document.getElementById('setup-screen');
     const gameScreen = document.getElementById('game-screen');
-    const statsScreen = document.getElementById('stats-screen');
     const winnerModal = document.getElementById('winner-modal');
     
-    // Referencje dla Modala Potwierdzenia
     const confirmModal = document.getElementById('confirm-modal');
     const confirmMessage = document.getElementById('confirm-message');
     const confirmYesBtn = document.getElementById('confirm-yes-btn');
@@ -252,70 +189,42 @@
     const playerCountSelect = document.getElementById('player-count');
     const playerNamesContainer = document.getElementById('player-names-container');
     const startGameBtn = document.getElementById('start-game-btn');
-    const showStatsBtn = document.getElementById('show-stats-btn');
 
     const scoreboard = document.getElementById('scoreboard');
     const scoreInputs = document.getElementById('score-inputs');
     const addRoundBtn = document.getElementById('add-round-btn');
     const backToMenuBtn = document.getElementById('back-to-menu-btn'); 
     const rotateFirstPlayerBtn = document.getElementById('rotate-first-player-btn');
-    const gameToStatsBtn = document.getElementById('game-to-stats-btn');
-    
     const roundHistoryContainer = document.getElementById('round-history-container');
-    
-    const statsSummary = document.getElementById('stats-summary');
-    const statsHistory = document.getElementById('stats-history');
-    const backFromStatsBtn = document.getElementById('back-from-stats-btn');
-    const clearStatsBtn = document.getElementById('clear-stats-btn');
-
     const modalBackToMenuBtn = document.getElementById('modal-back-to-menu-btn'); 
     
     const roundInfoDisplay = document.getElementById('round-info-display');
     const statusMessageContainer = document.getElementById('status-message-container');
 
-
-    // --- Stan Aplikacji ---
     let gameState = {
         players: [],
-        history: [], // Przechowuje wyniki rund
+        history: [],
         isActive: false,
         firstPlayerIndex: 0,
-        initialFirstPlayerIndex: 0, // Index gracza, który zaczął RUNDĘ 1
+        initialFirstPlayerIndex: 0,
     };
 
-    const GAME_STATE_KEY = 'tysiacGameState'; 
-    const STATS_KEY = 'tysiacGameStats'; 
-    
+    const GAME_STATE_KEY = 'tysiacGameState_local'; 
     const defaultPlayerNames = ['Kulik', 'Miś', 'Gracz 3', 'Gracz 4'];
-    
-    // Klasy do zarządzania podświetleniem lidera
-    const LEADER_CLASS = 'is-leader';
-    const DEFAULT_CARD_BG_CLASS = 'bg-slate-800'; 
 
-
-    // --- Funkcje Główne ---
-    
-    // Wyświetla tymczasowy komunikat (dla zaokrąglania, 800+, błędów rotacji)
     let messageTimeout;
     function showTemporaryMessage(message, isError = false) {
-        
         statusMessageContainer.innerHTML = `
-            <div class="p-2 rounded-lg ${isError ? 'bg-red-800 text-white' : 'bg-yellow-600 text-slate-900'} font-semibold">
+            <div class="p-2 rounded-lg ${isError ? 'bg-red-800 text-white' : 'bg-amber-600 text-white'} text-xs font-semibold">
                 ${message}
             </div>
         `;
-        
         clearTimeout(messageTimeout);
-        messageTimeout = setTimeout(() => {
-            statusMessageContainer.innerHTML = '';
-        }, 5000); // Komunikat znika po 5 sekundach
+        messageTimeout = setTimeout(() => { statusMessageContainer.innerHTML = ''; }, 5000);
     }
     
-    // Renderuje numer rundy i gracza "na musiku"
     function renderRoundInfo() {
         if (!gameState.isActive) return;
-
-        // Runda jest o 1 większa niż liczba zapisanych rund
         const currentRound = gameState.history.length + 1;
         const firstPlayerName = gameState.players[gameState.firstPlayerIndex].name;
 
@@ -324,196 +233,133 @@
             <span class="text-teal-400 font-bold">${currentRound}</span> 
             <span class="text-slate-300 ml-4 hidden sm:inline-block">|</span>
             <span class="text-slate-300 ml-4">Na musiku: </span>
-            <span class="text-amber-400 font-bold">${firstPlayerName} ♛</span>
+            <span class="text-amber-400 font-bold">${firstPlayerName}</span>
         `;
         
-        // Aktualizacja stanu przycisku rotacji
         const isRound1 = gameState.history.length === 0;
-        if (isRound1) {
-            rotateFirstPlayerBtn.classList.remove('btn-disabled');
-            rotateFirstPlayerBtn.disabled = false;
-            rotateFirstPlayerBtn.title = "Dostępne tylko w Rundzie 1.";
-        } else {
-            rotateFirstPlayerBtn.classList.add('btn-disabled');
-            rotateFirstPlayerBtn.disabled = true;
-            rotateFirstPlayerBtn.title = "Blokada: Dostępne tylko w Rundzie 1.";
-        }
+        rotateFirstPlayerBtn.classList.toggle('btn-disabled', !isRound1);
+        rotateFirstPlayerBtn.disabled = !isRound1;
     }
 
-    // Funkcja do przeliczania wszystkich wyników na podstawie historii
     function recalculateScores() {
-        // Resetuj wyniki wszystkich graczy
         gameState.players.forEach(player => player.score = 0);
-
-        // Iteruj przez całą historię i przelicz wyniki
         gameState.history.forEach(round => {
             gameState.players.forEach(player => {
-                const scoreToAdd = round[player.name] || 0;
-                player.score += scoreToAdd;
+                player.score += round[player.name] || 0;
             });
         });
         
-        // Ponowne ustawienie indeksu gracza rozpoczynającego na podstawie historii (automatyczna rotacja)
         if (gameState.players.length === 2) {
-            if (gameState.history.length % 2 === 0) {
-                gameState.firstPlayerIndex = gameState.initialFirstPlayerIndex;
-            } else {
-                gameState.firstPlayerIndex = (gameState.initialFirstPlayerIndex + 1) % 2; 
-            }
+            gameState.firstPlayerIndex = (gameState.history.length % 2 === 0) 
+                ? gameState.initialFirstPlayerIndex 
+                : (gameState.initialFirstPlayerIndex + 1) % 2;
         } else {
-            const totalRounds = gameState.history.length;
-            const rotations = totalRounds % gameState.players.length;
+            const rotations = gameState.history.length % gameState.players.length;
             gameState.firstPlayerIndex = (gameState.initialFirstPlayerIndex + rotations) % gameState.players.length;
         }
 
         updateScoreValues();
-        updateFirstPlayerMarker(); // Aktualizacja markera po recalculate (ważne przy cofaniu)
+        updateFirstPlayerMarker();
         renderRoundHistory();
         renderRoundInfo(); 
         saveGameState();
     }
 
-    // Walidacja 800+, minimum 10 punktów i zaokrąglanie do 10
     function addRoundScore() {
         const roundScores = {};
-        let scoresAdded = false;
-        let validationFailed = false;
         let roundingOccurred = false; 
-        let firstInput = document.getElementById('score-input-0'); 
 
         for (let i = 0; i < gameState.players.length; i++) {
             const player = gameState.players[i];
             const input = document.getElementById(`score-input-${i}`);
             let scoreValue = parseInt(input.value, 10);
             
-            // Traktuj puste pole jako 0
             if (isNaN(scoreValue) || input.value.trim() === '') {
                 scoreValue = 0; 
             }
-            
-            let finalRoundScore = scoreValue;
+
+            // POPRAWKA 2: Limit punktów w jednej rundzie (max 360)
+            if (Math.abs(scoreValue) > 360) {
+                showTemporaryMessage(`Błąd: Maksymalna liczba punktów w rundzie to 360. Gracz "${player.name}" ma wpisane ${scoreValue}.`, true);
+                input.focus();
+                return;
+            }
 
             if (scoreValue !== 0) {
-                // --- Walidacja 800+ (tylko dla punktów dodatnich) ---
-                // Walidacja dotyczy tylko dodatnich punktów, ujemne punkty (kary) są zawsze dozwolone.
                 if (player.score >= 800 && scoreValue > 0 && scoreValue < 100) {
-                    validationFailed = true;
-                    // Resetuj pole gracza, który złamał zasadę 800+
-                    input.value = ''; 
-                    break; // Przerwij pętlę i całą operację
+                    showTemporaryMessage(`Gracz z wynikiem 800+ (${player.name}) musi ugrać minimum 100 punktów.`, true);
+                    input.focus();
+                    return;
                 }
                 
-                // --- Zaokrąglenie do 10 (tylko dla punktów dodatnich) ---
                 if (scoreValue > 0) {
                     let roundedScore = Math.round(scoreValue / 10) * 10;
-                    
-                    if (roundedScore !== scoreValue) {
-                        roundingOccurred = true;
-                    }
-                    
-                    if (roundedScore === 0 && scoreValue > 0) {
-                         // Jeśli wpisano np. 1-4, zaokrąglenie daje 0
-                         finalRoundScore = 0;
-                    } else {
-                        finalRoundScore = roundedScore;
-                    }
-                    
-                    input.value = finalRoundScore; // Aktualizacja pola na ekranie (opcjonalnie)
+                    if (roundedScore !== scoreValue) roundingOccurred = true;
+                    scoreValue = roundedScore;
                 }
-                
-                scoresAdded = true;
             }
 
-            // Dodanie punktów (nawet 0 lub ujemnych) do tymczasowego obiektu
-            roundScores[player.name] = finalRoundScore;
+            roundScores[player.name] = scoreValue;
         }
 
-        if (validationFailed) {
-            // Komunikat o niepowodzeniu walidacji 800+
-            showTemporaryMessage('Gracz z wynikiem 800+ musi ugrać minimum 100 punktów (dla punktów dodatnich). Runda nie została dodana.', true);
-            if (firstInput) {
-                firstInput.focus();
-            }
-            return;
+        gameState.players.forEach(player => {
+            player.score += roundScores[player.name];
+        });
+        
+        gameState.history.unshift(roundScores);
+        
+        if (gameState.players.length === 2) {
+            gameState.firstPlayerIndex = (gameState.history.length % 2 !== 0)
+                ? (gameState.initialFirstPlayerIndex + 1) % 2
+                : gameState.initialFirstPlayerIndex;
+        } else {
+            gameState.firstPlayerIndex = (gameState.firstPlayerIndex + 1) % gameState.players.length;
         }
         
-        // Zawsze dodajemy rundę, nawet jeśli wszystkie wyniki to 0
-        if (true) { 
-            // Dodaj punkty do głównego stanu graczy 
-            gameState.players.forEach(player => {
-                player.score += roundScores[player.name];
-            });
-            
-            gameState.history.unshift(roundScores);
-            
-            // --- IMPLEMENTACJA ROTACJI GRACZA ROZPOCZYNAJĄCEGO ---
-            if (gameState.players.length === 2) {
-                if (gameState.history.length % 2 !== 0) {
-                    gameState.firstPlayerIndex = (gameState.initialFirstPlayerIndex + 1) % 2;
-                } else { 
-                    gameState.firstPlayerIndex = gameState.initialFirstPlayerIndex;
-                }
-            } else {
-                gameState.firstPlayerIndex = (gameState.firstPlayerIndex + 1) % gameState.players.length;
-            }
-            // -----------------------------------------------------------------
-            
-            updateScoreValues();
-            updateFirstPlayerMarker(); 
-            renderRoundHistory();
-            checkWinner();
-            saveGameState();
-            
-            // Resetowanie pól wejściowych
-            gameState.players.forEach((player, index) => {
-                 document.getElementById(`score-input-${index}`).value = '';
-            });
-            
-            if (roundingOccurred) {
-                showTemporaryMessage('Uwaga: Wprowadzony wynik dodatni został zaokrąglony do najbliższej 10-tki zgodnie z zasadami gry.', false);
-            }
-            
-            renderRoundInfo(); 
+        updateScoreValues();
+        updateFirstPlayerMarker(); 
+        renderRoundHistory();
+        checkWinner();
+        saveGameState();
+        
+        gameState.players.forEach((_, index) => {
+            document.getElementById(`score-input-${index}`).value = '';
+        });
+        
+        if (roundingOccurred) {
+            showTemporaryMessage('Wprowadzony wynik dodatni został zaokrąglony do najbliższej 10-tki.', false);
         }
         
-        // Ustawienie focusu na pierwszym polu
-        if (firstInput) {
-            firstInput.focus();
-        }
+        renderRoundInfo(); 
+        document.getElementById('score-input-0')?.focus();
     }
 
-
-    // Renderuje tabelę historii rund
     function renderRoundHistory() {
         if (gameState.history.length === 0) {
             roundHistoryContainer.innerHTML = '<p class="text-slate-500 text-xs text-center p-2">Brak dodanych rund.</p>';
             return;
         }
 
-        // 1. Nagłówki tabeli (Round + Player Names + Akcje)
         let headerHtml = '<tr><th class="w-1/6">Runda</th>';
         gameState.players.forEach(p => {
             const displayName = p.name.length > 5 ? p.name.substring(0, 5) + '.' : p.name;
             headerHtml += `<th class="whitespace-nowrap" title="${p.name}">${displayName}</th>`;
         });
-        headerHtml += '<th class="w-1/12">Akcje</th></tr>'; // Dodajemy kolumnę akcji
+        headerHtml += '<th class="w-1/12">Usuń</th></tr>';
 
-        // 2. Wiersze danych
         let bodyHtml = '';
         gameState.history.forEach((round, index) => {
             const roundNumber = gameState.history.length - index;
-            let rowHtml = `<tr id="history-row-${index}"><td>${roundNumber}</td>`;
+            let rowHtml = `<tr><td>${roundNumber}</td>`;
             
             gameState.players.forEach(p => {
                 const score = round[p.name] || 0;
-                // Dodanie klasy dla wyników ujemnych
                 const scoreClass = score < 0 ? 'score-negative' : 'history-score';
                 rowHtml += `<td class="${scoreClass}">${score}</td>`;
             });
 
-            // Przycisk Usuń
             rowHtml += `<td>
-                <button onclick="confirmDeleteRound(${index})" class="text-red-500 hover:text-red-400 p-0.5 rounded transition duration-150" title="Usuń rundę">
+                <button onclick="confirmDeleteRound(${index})" class="text-red-400 hover:text-red-300 p-0.5 rounded" title="Usuń rundę">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mx-auto" viewBox="0 0 20 20" fill="currentColor">
                       <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" />
                     </svg>
@@ -522,113 +368,66 @@
             bodyHtml += rowHtml;
         });
 
-        // 3. Złóż całą tabelę
-        roundHistoryContainer.innerHTML = `
-            <table>
-                <thead>${headerHtml}</thead>
-                <tbody>${bodyHtml}</tbody>
-            </table>
-        `;
+        roundHistoryContainer.innerHTML = `<table><thead>${headerHtml}</thead><tbody>${bodyHtml}</tbody></table>`;
     }
     
-    // Funkcja do usunięcia rundy (udostępniona globalnie)
     window.confirmDeleteRound = function(historyIndex) {
-        showCustomConfirm('Czy na pewno chcesz usunąć tę rundę? Wyniki zostaną przeliczone.', () => {
-            deleteRound(historyIndex);
+        showCustomConfirm('Czy na pewno chcesz usunąć tę rundę?', () => {
+            gameState.history.splice(historyIndex, 1); 
+            recalculateScores();
+            checkWinner(); 
         });
     }
 
-    function deleteRound(historyIndex) {
-        gameState.history.splice(historyIndex, 1); 
-        recalculateScores();
-        checkWinner(); 
-    }
-    
-    // Obsługa klawisza Enter
     function handleInputKeydown(e) {
         if (e.key === 'Enter') {
             e.preventDefault();
-            
-            const currentInput = e.target;
-            const currentIndex = parseInt(currentInput.dataset.playerIndex, 10);
+            const currentIndex = parseInt(e.target.dataset.playerIndex, 10);
             const nextIndex = currentIndex + 1;
-            const totalPlayers = gameState.players.length;
 
-            if (nextIndex < totalPlayers) {
-                // Przejdź do następnego gracza
-                const nextInput = document.getElementById(`score-input-${nextIndex}`);
-                nextInput?.focus();
+            if (nextIndex < gameState.players.length) {
+                document.getElementById(`score-input-${nextIndex}`)?.focus();
             } else {
-                // Ostatni gracz - dodaj wynik rundy
-                addRoundScore();
-                // Focus ustawiony w addRoundScore
+                addRoundBtn.click();
             }
         }
     }
 
-
-    // Renderuje cały ekran gry (tablicę wyników i pola do wpisywania)
     function renderGameScreen() {
         scoreboard.innerHTML = '';
         scoreInputs.innerHTML = '';
         gameState.players.forEach((player, index) => {
-            // Tworzenie karty wyniku
             const scoreCard = document.createElement('div');
-            // Nadajemy jej domyślne klasy i klasę 'card' zdefiniowaną w CSS
-            scoreCard.className = 'card text-center'; 
-            
-            // Kolor wyniku
-            const scoreClass = player.score >= 800 ? 'score-danger' : 'text-teal-400';
-
+            scoreCard.className = 'card text-center p-2.5'; 
             scoreCard.innerHTML = `
-                <div id="player-name-${index}" class="text-sm font-semibold flex items-center justify-center gap-1">
-                    ${player.name}
-                </div>
-                <!-- WAŻNA ZMIANA: Początkowy wynik musi być wstawiony tutaj -->
-                <div id="player-score-${index}" class="text-3xl font-bold mt-1 ${scoreClass}">${player.score}</div>
+                <div id="player-name-${index}" class="text-xs font-semibold text-slate-300 flex items-center justify-center gap-1"></div>
+                <div id="player-score-${index}" class="text-2xl font-bold mt-1 ${player.score >= 800 ? 'score-danger' : 'text-teal-400'}">${player.score}</div>
             `;
             scoreboard.appendChild(scoreCard);
 
-            // Tworzenie pola do wpisywania punktów
             const inputContainer = document.createElement('div');
             inputContainer.innerHTML = `
                 <label for="score-input-${index}" class="block mb-1 text-xs font-medium text-slate-400">${player.name}</label>
-                <input type="number" 
-                       id="score-input-${index}" 
-                       class="input-field text-center text-sm" 
-                       placeholder="0" 
-                       data-player-index="${index}">
+                <input type="number" id="score-input-${index}" class="input-field text-center text-sm font-bold" placeholder="0" data-player-index="${index}">
             `;
             scoreInputs.appendChild(inputContainer);
             
-            // Dodanie słuchacza do nowego pola (dla obsługi klawisza Enter)
-            const inputField = document.getElementById(`score-input-${index}`);
-            inputField.addEventListener('keydown', handleInputKeydown);
+            document.getElementById(`score-input-${index}`)?.addEventListener('keydown', handleInputKeydown);
         });
         
-        updateScoreValues(); // Uruchamiamy, by ustawić podświetlenie
+        updateScoreValues();
         updateFirstPlayerMarker(); 
         renderRoundHistory();
         renderRoundInfo(); 
-        
         document.getElementById('score-input-0')?.focus(); 
     }
 
-    // Aktualizuje tylko wyświetlane wyniki na tablicy (NAPRAWIONA WERSJA)
+    // POPRAWKA 1: Brak wyróżnienia lidera – tylko zmiana koloru przy 800+
     function updateScoreValues() {
-        // Ustalenie lidera
-        const maxScore = Math.max(...gameState.players.map(p => p.score));
-        
         gameState.players.forEach((player, index) => {
             const scoreElement = document.getElementById(`player-score-${index}`);
-            // Pobrana karta gracza z tablicy wyników
-            const cardElement = scoreboard.children[index]; 
-            
             if (scoreElement) {
-                // *** KLUCZOWA POPRAWKA: Ustawienie wartości tekstowej wyniku gracza ***
                 scoreElement.textContent = player.score; 
-
-                // 1. Zmiana koloru tekstu wyniku (800+)
                 if (player.score >= 800) {
                     scoreElement.classList.add('score-danger');
                     scoreElement.classList.remove('text-teal-400');
@@ -637,32 +436,33 @@
                     scoreElement.classList.add('text-teal-400');
                 }
             }
-            
-            // 2. Podświetlenie Lidera
-            // Gracz jest liderem, jeśli jego wynik jest równy maksymalnemu i większy od 0 
-            const isLeader = player.score === maxScore && maxScore > 0;
-            
-            // Zresetuj klasy na karcie
-            if (cardElement) {
-                cardElement.classList.remove(LEADER_CLASS); 
-                if (isLeader) {
-                    cardElement.classList.add(LEADER_CLASS); 
-                }
-            }
         });
     }
-    
-    // --- Reszta niezmienionych funkcji pomocniczych i logiki gry ---
+
+    // Oznaczenie tylko gracza na musiku
+    function updateFirstPlayerMarker() {
+        gameState.players.forEach((player, index) => {
+            const nameElement = document.getElementById(`player-name-${index}`);
+            if (!nameElement) return;
+
+            const isStartPlayer = (index === gameState.initialFirstPlayerIndex);
+            const startStar = isStartPlayer ? '<span class="text-rose-400 font-normal mr-1" title="Start meczu">★</span>' : '';
+            const musikBadge = (index === gameState.firstPlayerIndex) 
+                ? '<span class="bg-amber-500/20 text-amber-400 border border-amber-500/40 text-[9px] px-1 rounded font-black uppercase ml-1" title="Na musiku">M</span>' 
+                : '';
+
+            nameElement.innerHTML = `<span class="flex items-center justify-center">${startStar}<span>${player.name}</span>${musikBadge}</span>`;
+        });
+    }
 
     function generatePlayerNameInputs() {
         const count = parseInt(playerCountSelect.value, 10);
         playerNamesContainer.innerHTML = '';
         for (let i = 1; i <= count; i++) {
             const defaultName = defaultPlayerNames[i - 1] || `Gracz ${i}`;
-            
             const div = document.createElement('div');
             div.innerHTML = `
-                <label for="player${i}" class="block mb-1 text-sm font-medium text-slate-400">Imię gracza ${i}:</label>
+                <label for="player${i}" class="block mb-1 text-xs font-medium text-slate-400">Imię gracza ${i}:</label>
                 <input type="text" id="player${i}" class="input-field" placeholder="Gracz ${i}" value="${defaultName}">
             `;
             playerNamesContainer.appendChild(div);
@@ -678,7 +478,7 @@
             const playerNameInput = document.getElementById(`player${i}`);
             const playerName = playerNameInput.value.trim();
             if (playerName === '') {
-                playerNameInput.style.borderColor = 'red';
+                playerNameInput.style.borderColor = '#f87171';
                 hasValidNames = false;
             } else {
                 playerNameInput.style.borderColor = '';
@@ -691,116 +491,52 @@
             return;
         }
 
-        gameState = { 
-            players, 
-            history: [], 
-            isActive: true, 
-            firstPlayerIndex: 0, 
-            initialFirstPlayerIndex: 0 // Ustawia, kto zaczął RUNDĘ 1
-        };
+        gameState = { players, history: [], isActive: true, firstPlayerIndex: 0, initialFirstPlayerIndex: 0 };
         saveGameState(); 
         renderGameScreen();
         
         setupScreen.classList.add('hidden');
-        statsScreen.classList.add('hidden');
         gameScreen.classList.remove('hidden');
     }
 
     function checkWinner() {
         const potentialWinners = gameState.players.filter(p => p.score >= 1000);
-
         if (potentialWinners.length > 0) {
-            // W przypadku remisu powyżej 1000, wygrywa gracz, który ma więcej punktów
             const winner = potentialWinners.reduce((prev, current) => (prev.score > current.score) ? prev : current);
             endGame(winner);
         }
     }
 
+    // POPRAWKA 3: Wyczyszczenie zapisu statystyk – czysty licznik
     function endGame(winner) {
-        if (gameState.isActive) {
-            saveStats(winner);
-        }
-        
-        const winnerMessage = document.getElementById('winner-message');
-        const finalScores = document.getElementById('final-scores');
-
-        winnerMessage.textContent = `Wygrywa ${winner.name}! Gratulacje!`;
-        finalScores.innerHTML = '<h4>Końcowe wyniki:</h4>' + gameState.players
+        document.getElementById('winner-message').textContent = `Wygrywa ${winner.name}! Gratulacje!`;
+        document.getElementById('final-scores').innerHTML = '<h4>Końcowe wyniki:</h4>' + [...gameState.players]
+            .sort((a,b) => b.score - a.score)
             .map(p => `<div class="flex justify-between"><span>${p.name}:</span><span class="font-semibold">${p.score} pkt</span></div>`)
             .join('');
 
         winnerModal.classList.remove('hidden');
         winnerModal.classList.add('flex');
-        
         clearGameState();
-    }
-    
-    function saveStats(winner) {
-        const stats = getStats();
-        
-        const gameRecord = {
-            date: new Date().toLocaleString('pl-PL'),
-            winner: winner.name,
-            players: gameState.players.map(p => ({ name: p.name, score: p.score })),
-        };
-
-        stats.games.unshift(gameRecord);
-        
-        if (!stats.playerWins[winner.name]) {
-            stats.playerWins[winner.name] = 0;
-        }
-        stats.playerWins[winner.name]++;
-        stats.totalGames++;
-
-        localStorage.setItem(STATS_KEY, JSON.stringify(stats));
     }
     
     function resetGame() {
         clearGameState();
         gameScreen.classList.add('hidden');
-        statsScreen.classList.add('hidden');
         setupScreen.classList.remove('hidden');
         winnerModal.classList.add('hidden');
         winnerModal.classList.remove('flex');
         generatePlayerNameInputs();
     }
 
-    function updateFirstPlayerMarker() {
-        gameState.players.forEach((player, index) => {
-            const nameElement = document.getElementById(`player-name-${index}`);
-            if (!nameElement) return;
-
-            // Wyczyść wszystkie markery
-            let markersHtml = '';
-
-            // 1. Marker gracza rozpoczynającego obecną rundę (ruchomy)
-            if (index === gameState.firstPlayerIndex) {
-                markersHtml += '<span class="text-amber-400 text-xs ml-1" title="Gracz rozpoczynający rundę / Na musiku">♛</span>';
-            }
-            
-            // 2. Marker gracza, który zaczął pierwszą rundę (stały)
-            if (index === gameState.initialFirstPlayerIndex) {
-                markersHtml += '<span class="text-red-400 text-xs ml-1 font-bold" title="Gracz rozpoczynający RUNDĘ 1">♛ START</span>';
-            }
-            
-            nameElement.innerHTML = `${player.name} ${markersHtml}`;
-
-        });
-    }
-
     function rotateFirstPlayer() {
-        // BLOKADA: Zmiana dostępna tylko w Rundzie 1
         if (gameState.history.length > 0) { 
-            showTemporaryMessage('Ręczna zmiana gracza rozpoczynającego jest możliwa tylko w Rundzie 1.', true);
+            showTemporaryMessage('Zmiana możliwa tylko w Rundzie 1.', true);
             return;
         }
-        
         if (!gameState.isActive || gameState.players.length < 2) return;
         
-        // Ręczny override
         gameState.firstPlayerIndex = (gameState.firstPlayerIndex + 1) % gameState.players.length;
-        
-        // Aktualizacja initialFirstPlayerIndex (ponieważ jest to Runda 1)
         gameState.initialFirstPlayerIndex = gameState.firstPlayerIndex;
         
         updateFirstPlayerMarker();
@@ -808,82 +544,14 @@
         saveGameState(); 
     }
 
-    function showStats() {
-        const stats = getStats();
-
-        let summaryHtml = `<p class="text-base">Zagrano łącznie: <span class="font-bold text-teal-400">${stats.totalGames}</span> gier</p>`;
-        const sortedWins = Object.entries(stats.playerWins).sort(([,a],[,b]) => b-a);
-        
-        if (sortedWins.length > 0) {
-            summaryHtml += `<h4 class="mt-3 mb-2 font-semibold text-sm">Ranking zwycięstw:</h4>`;
-            summaryHtml += `<div class="space-y-1 text-sm">`
-            sortedWins.forEach(([name, wins]) => {
-                const winPercentage = stats.totalGames > 0 ? ((wins / stats.totalGames) * 100).toFixed(0) : 0;
-                summaryHtml += `<div class="flex justify-center gap-2"><span>${name}:</span> <span class="font-semibold">${wins} wygrane (${winPercentage}%)</span></div>`;
-            });
-            summaryHtml += `</div>`
-        }
-        statsSummary.innerHTML = summaryHtml;
-
-        statsHistory.innerHTML = '';
-        if (stats.games.length === 0) {
-            statsHistory.innerHTML = '<p class="text-slate-400 text-center text-sm">Brak historii gier.</p>';
-        } else {
-            stats.games.forEach(game => {
-                const gameDiv = document.createElement('div');
-                gameDiv.className = 'bg-slate-800 p-2 rounded-lg';
-                let playersHtml = game.players
-                    .sort((a,b) => b.score - a.score)
-                    .map(p => `<li class="text-slate-300">${p.name}: <strong>${p.score}</strong></li>`).join('');
-                
-                gameDiv.innerHTML = `
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="font-semibold text-sm">Zwycięzca: <span class="text-teal-400">${game.winner}</span></p>
-                            <p class="text-xs text-slate-400">${game.date}</p>
-                        </div>
-                        <details class="text-xs text-right">
-                            <summary class="cursor-pointer font-medium p-1">Wyniki</summary>
-                            <ul class="list-none mt-1 text-left text-xs">${playersHtml}</ul>
-                        </details>
-                    </div>
-                `;
-                statsHistory.appendChild(gameDiv);
-            });
-        }
-
-        setupScreen.classList.add('hidden');
-        gameScreen.classList.add('hidden');
-        statsScreen.classList.remove('hidden');
-    }
-    
-    function handleBackFromStats() {
-        statsScreen.classList.add('hidden');
-        if(gameState.isActive) {
-            gameScreen.classList.remove('hidden');
-        } else {
-            setupScreen.classList.remove('hidden');
-        }
-    }
-
-    function handleClearStats() {
-        showCustomConfirm('Czy na pewno chcesz usunąć wszystkie zapisane statystyki? Tej operacji nie można cofnąć.', () => {
-            localStorage.removeItem(STATS_KEY);
-            showStats();
-        });
-    }
-
     function handleBackToMenu() {
         if (gameState.isActive) {
-            showCustomConfirm('Czy na pewno chcesz porzucić obecną grę i wrócić do menu? Postęp nie zostanie zapisany w statystykach.', () => {
-                resetGame();
-            });
+            showCustomConfirm('Czy na pewno chcesz porzucić obecną grę?', resetGame);
         } else {
-             resetGame();
+            resetGame();
         }
     }
 
-    // --- Przechowywanie Danych (localStorage) ---
     function saveGameState() {
         if (gameState.isActive) {
             localStorage.setItem(GAME_STATE_KEY, JSON.stringify(gameState));
@@ -893,20 +561,16 @@
     function loadGameState() {
         const savedState = localStorage.getItem(GAME_STATE_KEY);
         if (savedState) {
-            const loadedState = JSON.parse(savedState);
-            if (typeof loadedState.initialFirstPlayerIndex === 'undefined') {
-                 loadedState.initialFirstPlayerIndex = loadedState.firstPlayerIndex || 0;
-            }
-            
-            gameState = loadedState;
-            
-            if (gameState.players && gameState.players.length > 0) {
-                gameState.isActive = true; 
-                renderGameScreen();
-                setupScreen.classList.add('hidden');
-                gameScreen.classList.remove('hidden');
-                return true;
-            } else {
+            try {
+                const loadedState = JSON.parse(savedState);
+                if (loadedState.isActive && loadedState.players && loadedState.players.length > 0) {
+                    gameState = loadedState;
+                    renderGameScreen();
+                    setupScreen.classList.add('hidden');
+                    gameScreen.classList.remove('hidden');
+                    return true;
+                }
+            } catch (e) {
                 clearGameState();
             }
         }
@@ -914,42 +578,10 @@
     }
 
     function clearGameState() {
-        gameState = { 
-            players: [], 
-            history: [], 
-            isActive: false, 
-            firstPlayerIndex: 0, 
-            initialFirstPlayerIndex: 0 
-        };
+        gameState = { players: [], history: [], isActive: false, firstPlayerIndex: 0, initialFirstPlayerIndex: 0 };
         localStorage.removeItem(GAME_STATE_KEY);
     }
-    
-    function getStats() {
-        const savedStats = localStorage.getItem(STATS_KEY);
-        if (savedStats) {
-            return JSON.parse(savedStats);
-        }
-        return { totalGames: 0, playerWins: {}, games: [] };
-    }
 
-
-    // --- Event Listeners ---
-    
-    showStatsBtn.addEventListener('click', showStats);
-    gameToStatsBtn.addEventListener('click', showStats);
-    backFromStatsBtn.addEventListener('click', handleBackFromStats);
-
-    playerCountSelect.addEventListener('change', generatePlayerNameInputs);
-    startGameBtn.addEventListener('click', startGame);
-    addRoundBtn.addEventListener('click', addRoundScore);
-    rotateFirstPlayerBtn.addEventListener('click', rotateFirstPlayer);
-    
-    backToMenuBtn.addEventListener('click', handleBackToMenu);
-    modalBackToMenuBtn.addEventListener('click', resetGame); 
-    clearStatsBtn.addEventListener('click', handleClearStats);
-
-
-    // --- Funkcje do niestandardowych okienek (Alert/Confirm) ---
     let currentYesHandler = null;
     let currentNoHandler = null;
 
@@ -973,12 +605,8 @@
             confirmYesBtn.classList.remove('btn-primary', 'w-full');
         }
 
-        if (currentYesHandler) {
-            confirmYesBtn.removeEventListener('click', currentYesHandler);
-        }
-        if (currentNoHandler) {
-            confirmNoBtn.removeEventListener('click', currentNoHandler);
-        }
+        if (currentYesHandler) confirmYesBtn.removeEventListener('click', currentYesHandler);
+        if (currentNoHandler) confirmNoBtn.removeEventListener('click', currentNoHandler);
 
         const cleanUp = () => {
             confirmModal.classList.add('hidden');
@@ -990,31 +618,20 @@
 
         const handleYes = () => {
             cleanUp();
-            if (showNoButton) {
-                onConfirm(); 
-            }
+            if (showNoButton) onConfirm(); 
         };
 
-        const handleNo = () => {
-            cleanUp();
-        };
-        
         currentYesHandler = handleYes;
-        currentNoHandler = handleNo;
+        currentNoHandler = cleanUp;
         
         confirmYesBtn.addEventListener('click', currentYesHandler);
         confirmNoBtn.addEventListener('click', currentNoHandler);
     }
 
-
-    // --- Inicjalizacja Aplikacji ---
-    const gameLoaded = loadGameState();
-    
-    if (!gameLoaded) {
+    // Inicjalizacja
+    if (!loadGameState()) {
         generatePlayerNameInputs();
     }
-    
-
 </script>
 </body>
 </html>
